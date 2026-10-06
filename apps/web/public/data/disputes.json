@@ -1,0 +1,103 @@
+[
+  {
+    "id": "DSP-0001",
+    "vendorId": "summit-analytics",
+    "target": {
+      "kind": "CVE",
+      "id": "DEMO-2024-1028"
+    },
+    "runId": "TS-2026-10-06-5F78",
+    "reason": "INCORRECT_VENDOR_ATTRIBUTION",
+    "submitterRole": "VENDOR",
+    "statement": "This record names our product line, but the affected component ships only in the other vendor’s appliance. We ask that it be attributed to them, not left unattributed.",
+    "evidenceUrls": [
+      "https://psirt.example/advisories/attribution-note"
+    ],
+    "status": "OPEN",
+    "createdAt": "2026-10-06T09:12:00Z",
+    "history": [
+      {
+        "at": "2026-10-06T09:12:00Z",
+        "from": null,
+        "to": "OPEN",
+        "actor": "submitter",
+        "note": "Submitted."
+      }
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "DSP-0003",
+    "vendorId": "cobalt-ridge-software",
+    "target": {
+      "kind": "METRIC",
+      "id": "cve.cpe_namespace_consistency"
+    },
+    "runId": "TS-2026-07-06-6BAB",
+    "reason": "INCORRECT_PRODUCT_MAPPING",
+    "submitterRole": "RESEARCHER",
+    "statement": "Several CPEs use the vendor’s pre-acquisition namespace. The registry should list both namespaces with the acquisition as evidence.",
+    "evidenceUrls": [
+      "https://research.example/notes/cpe-namespaces"
+    ],
+    "status": "CORRECTED",
+    "createdAt": "2026-07-06T10:00:00Z",
+    "history": [
+      {
+        "at": "2026-07-06T10:00:00Z",
+        "from": null,
+        "to": "OPEN",
+        "actor": "submitter",
+        "note": "Submitted."
+      },
+      {
+        "at": "2026-07-06T16:20:00Z",
+        "from": "OPEN",
+        "to": "UNDER_REVIEW",
+        "actor": "reviewer",
+        "note": "Checking the acquisition announcement."
+      },
+      {
+        "at": "2026-10-06T08:30:00Z",
+        "from": "UNDER_REVIEW",
+        "to": "CORRECTED",
+        "actor": "reviewer",
+        "note": "Registry decision recorded. The original run is unchanged; the corrected figure appears in the later run.",
+        "correctedInRunId": "TS-2026-10-06-5F78"
+      }
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "DSP-0004",
+    "vendorId": "brightwater-networks",
+    "target": {
+      "kind": "METRIC",
+      "id": "cve.cwe_coverage"
+    },
+    "runId": "TS-2026-10-06-5F78",
+    "reason": "METHODOLOGY_ERROR",
+    "submitterRole": "VENDOR",
+    "statement": "NVD shows a CWE for these records, so CWE coverage should be 100%.",
+    "evidenceUrls": [],
+    "status": "DISMISSED",
+    "createdAt": "2026-10-06T13:15:00Z",
+    "history": [
+      {
+        "at": "2026-10-06T13:15:00Z",
+        "from": null,
+        "to": "OPEN",
+        "actor": "submitter",
+        "note": "Submitted."
+      },
+      {
+        "at": "2026-10-06T17:45:00Z",
+        "from": "OPEN",
+        "to": "DISMISSED",
+        "actor": "reviewer",
+        "note": "The CWE on those records was added by a third party (ADP enrichment), not supplied in the CNA container. The pledge metric credits the manufacturer’s own record data; enrichment is reported separately."
+      }
+    ],
+    "synthetic": true
+  }
+]

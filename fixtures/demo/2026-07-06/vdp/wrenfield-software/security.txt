@@ -1,0 +1,9 @@
+# Security contact for Wrenfield Software (synthetic demo data)
+Contact: mailto:security@wrenfield.example
+Contact: https://wrenfield.example/security/report
+Expires: 2027-01-22T00:00:00.000Z
+Encryption: https://wrenfield.example/security/pgp-key.txt
+Preferred-Languages: en
+Canonical: https://wrenfield.example/.well-known/security.txt
+Policy: https://wrenfield.example/security/vulnerability-disclosure
+CSAF: https://wrenfield.example/.well-known/csaf/provider-metadata.json

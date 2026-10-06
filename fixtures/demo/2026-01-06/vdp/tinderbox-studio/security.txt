@@ -1,0 +1,9 @@
+# Security contact for Tinderbox Studio (synthetic demo data)
+Contact: mailto:security@tinderbox.example
+Contact: https://tinderbox.example/security/report
+Expires: 2026-07-25T00:00:00.000Z
+Encryption: https://tinderbox.example/security/pgp-key.txt
+Preferred-Languages: en
+Canonical: https://tinderbox.example/.well-known/security.txt
+Policy: https://tinderbox.example/security/vulnerability-disclosure
+CSAF: https://tinderbox.example/.well-known/csaf/provider-metadata.json

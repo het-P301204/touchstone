@@ -1,0 +1,9 @@
+# Security contact for Cobalt Ridge Software (synthetic demo data)
+Contact: mailto:security@cobaltridge.example
+Contact: https://cobaltridge.example/security/report
+Expires: 2026-04-24T00:00:00.000Z
+Encryption: https://cobaltridge.example/security/pgp-key.txt
+Preferred-Languages: en
+Canonical: https://cobaltridge.example/.well-known/security.txt
+Policy: https://cobaltridge.example/security/vulnerability-disclosure
+CSAF: https://cobaltridge.example/.well-known/csaf/provider-metadata.json

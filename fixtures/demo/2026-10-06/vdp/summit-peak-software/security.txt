@@ -1,0 +1,9 @@
+# Security contact for Summit Peak Software (synthetic demo data)
+Contact: mailto:security@summitpeak.example
+Contact: https://summitpeak.example/security/report
+Expires: 2027-04-24T00:00:00.000Z
+Encryption: https://summitpeak.example/security/pgp-key.txt
+Preferred-Languages: en
+Canonical: https://summitpeak.example/.well-known/security.txt
+Policy: https://summitpeak.example/security/vulnerability-disclosure
+CSAF: https://summitpeak.example/.well-known/csaf/provider-metadata.json

@@ -1,0 +1,38 @@
+[
+  {
+    "id": "NB-0001",
+    "title": "Third-party enrichment hides gaps in vendor records",
+    "observation": "One vendor’s records look complete on NVD, but most CWE values come from an ADP container, not the CNA container. Crediting them would measure the enricher, not the manufacturer.",
+    "resolution": "Methodology credits CNA-supplied fields only and reports enrichment as its own metric (cve.enriched_only).",
+    "createdAt": "2026-10-06T09:00:00Z",
+    "tags": [
+      "cve-quality",
+      "methodology"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "NB-0002",
+    "title": "Placeholder CWEs are not weaknesses",
+    "observation": "Under methodology 1.0.0, NVD-CWE-noinfo counted as a populated CWE. It states that no weakness was identified.",
+    "resolution": "Methodology 1.1.0 stops counting placeholders. Runs made under 1.0.0 keep their published figures.",
+    "createdAt": "2026-06-15T09:00:00Z",
+    "tags": [
+      "methodology",
+      "versioning"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "NB-0003",
+    "vendorId": "ferrous-industrial",
+    "title": "Identity conflict on CPE_VENDOR \"kestrel\"",
+    "observation": "\"kestrel\" is registered as a CPE_VENDOR for 2 vendors (ferrous-industrial, kestrel-controls). Records whose attribution depends on it are excluded until a registry decision resolves it.",
+    "resolution": "Records using the shared name stay excluded until a registry decision cites evidence for one vendor.",
+    "createdAt": "2026-10-06T10:30:00Z",
+    "tags": [
+      "identity"
+    ],
+    "synthetic": true
+  }
+]

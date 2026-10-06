@@ -1,0 +1,17 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA256
+
+# Security contact for Halcyon Cloud (synthetic demo data)
+Contact: mailto:security@halcyon.example
+Contact: https://halcyon.example/security/report
+Expires: 2026-07-25T00:00:00.000Z
+Encryption: https://halcyon.example/security/pgp-key.txt
+Preferred-Languages: en
+Canonical: https://halcyon.example/.well-known/security.txt
+Policy: https://halcyon.example/security/vulnerability-disclosure
+CSAF: https://halcyon.example/.well-known/csaf/provider-metadata.json
+-----BEGIN PGP SIGNATURE-----
+
+c3ludGhldGljIHNpZ25hdHVyZSBmb3IgZGVtbyBkYXRh
+=demo
+-----END PGP SIGNATURE-----

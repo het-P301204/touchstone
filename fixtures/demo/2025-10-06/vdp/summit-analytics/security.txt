@@ -1,0 +1,9 @@
+# Security contact for Summit Analytics (synthetic demo data)
+Contact: mailto:security@summitanalytics.example
+Contact: https://summitanalytics.example/security/report
+Expires: 2026-04-24T00:00:00.000Z
+Encryption: https://summitanalytics.example/security/pgp-key.txt
+Preferred-Languages: en
+Canonical: https://summitanalytics.example/.well-known/security.txt
+Policy: https://summitanalytics.example/security/vulnerability-disclosure
+CSAF: https://summitanalytics.example/.well-known/csaf/provider-metadata.json

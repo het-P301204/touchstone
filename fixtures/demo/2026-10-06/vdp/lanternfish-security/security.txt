@@ -1,0 +1,9 @@
+# Security contact for Lanternfish Security (synthetic demo data)
+Contact: mailto:security@lanternfish.example
+Contact: https://lanternfish.example/security/report
+Expires: 2027-04-24T00:00:00.000Z
+Encryption: https://lanternfish.example/security/pgp-key.txt
+Preferred-Languages: en
+Canonical: https://lanternfish.example/.well-known/security.txt
+Policy: https://lanternfish.example/security/vulnerability-disclosure
+CSAF: https://lanternfish.example/.well-known/csaf/provider-metadata.json

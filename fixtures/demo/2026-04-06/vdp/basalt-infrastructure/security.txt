@@ -1,0 +1,9 @@
+# Security contact for Basalt Infrastructure (synthetic demo data)
+Contact: mailto:security@basalt.example
+Contact: https://basalt.example/security/report
+Expires: 2026-10-23T00:00:00.000Z
+Encryption: https://basalt.example/security/pgp-key.txt
+Preferred-Languages: en
+Canonical: https://basalt.example/.well-known/security.txt
+Policy: https://disclosure-platform.example/programs/basalt
+CSAF: https://basalt.example/.well-known/csaf/provider-metadata.json

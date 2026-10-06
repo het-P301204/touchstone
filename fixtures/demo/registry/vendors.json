@@ -1,0 +1,2264 @@
+[
+  {
+    "id": "northwind-systems",
+    "canonicalName": "Northwind Systems",
+    "aliases": [
+      {
+        "kind": "LEGAL_NAME",
+        "value": "Northwind Systems, Inc.",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Legal name on the company imprint.",
+            "url": "https://northwind.example/legal/imprint"
+          }
+        ]
+      },
+      {
+        "kind": "BRAND",
+        "value": "Northwind Systems",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Brand used on the company website.",
+            "url": "https://northwind.example/"
+          }
+        ]
+      },
+      {
+        "kind": "SIGNATORY_LISTING",
+        "value": "Northwind Systems",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Name as printed on the signer list.",
+            "url": "https://cisa-pledge.example/securebydesign/pledge/secure-design-pledge-signers"
+          }
+        ]
+      },
+      {
+        "kind": "AFFECTED_VENDOR",
+        "value": "Northwind Systems",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "\"Northwind Systems\" is used for Northwind Systems products in CVE affected[] entries.",
+            "url": "https://northwind.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "CPE_VENDOR",
+        "value": "northwind",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "CPE vendor namespace used in Northwind Systems records.",
+            "url": "https://northwind.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "ADVISORY_DOMAIN",
+        "value": "northwind.example",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Advisories are published on this domain.",
+            "url": "https://northwind.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "CNA_SHORT_NAME",
+        "value": "northwind",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Northwind Systems is a CNA with this short name.",
+            "url": "https://cve.example/partners"
+          }
+        ]
+      },
+      {
+        "kind": "CNA_ORG_ID",
+        "value": "79ea427e-9c81-451f-8428-ffcef8a277b6",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "CNA organisation id in the partner list.",
+            "url": "https://cve.example/partners"
+          }
+        ]
+      }
+    ],
+    "signatoryStatus": "UNKNOWN",
+    "category": "ENTERPRISE_SOFTWARE",
+    "domains": [
+      "northwind.example"
+    ],
+    "claims": [
+      {
+        "goalId": "G1",
+        "summary": "Vendor states MFA is enabled by default for all new administrator accounts.",
+        "url": "https://northwind.example/blog/secure-by-design-progress",
+        "publishedOn": "2025-05-08"
+      }
+    ],
+    "synthetic": true,
+    "signedOn": "2024-05-08",
+    "sizeBand": "LARGE",
+    "region": "North America",
+    "csafProviderUrl": "https://northwind.example/.well-known/csaf/provider-metadata.json",
+    "vdpPolicyUrl": "https://northwind.example/security/vulnerability-disclosure"
+  },
+  {
+    "id": "halcyon-cloud",
+    "canonicalName": "Halcyon Cloud",
+    "aliases": [
+      {
+        "kind": "LEGAL_NAME",
+        "value": "Halcyon Cloud LLC",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Legal name on the company imprint.",
+            "url": "https://halcyon.example/legal/imprint"
+          }
+        ]
+      },
+      {
+        "kind": "BRAND",
+        "value": "Halcyon Cloud",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Brand used on the company website.",
+            "url": "https://halcyon.example/"
+          }
+        ]
+      },
+      {
+        "kind": "SIGNATORY_LISTING",
+        "value": "Halcyon Cloud, Inc.",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Name as printed on the signer list.",
+            "url": "https://cisa-pledge.example/securebydesign/pledge/secure-design-pledge-signers"
+          }
+        ]
+      },
+      {
+        "kind": "AFFECTED_VENDOR",
+        "value": "Halcyon Cloud",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "\"Halcyon Cloud\" is used for Halcyon Cloud products in CVE affected[] entries.",
+            "url": "https://halcyon.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "CPE_VENDOR",
+        "value": "halcyon",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "CPE vendor namespace used in Halcyon Cloud records.",
+            "url": "https://halcyon.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "ADVISORY_DOMAIN",
+        "value": "halcyon.example",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Advisories are published on this domain.",
+            "url": "https://halcyon.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "CNA_SHORT_NAME",
+        "value": "halcyon",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Halcyon Cloud is a CNA with this short name.",
+            "url": "https://cve.example/partners"
+          }
+        ]
+      },
+      {
+        "kind": "CNA_ORG_ID",
+        "value": "a56d2ded-f217-44bb-893a-9ab434a635a2",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "CNA organisation id in the partner list.",
+            "url": "https://cve.example/partners"
+          }
+        ]
+      }
+    ],
+    "signatoryStatus": "UNKNOWN",
+    "category": "CLOUD",
+    "domains": [
+      "halcyon.example"
+    ],
+    "claims": [
+      {
+        "goalId": "G2",
+        "summary": "Vendor states default passwords were removed from all appliance images.",
+        "url": "https://halcyon.example/trust/pledge",
+        "publishedOn": "2025-06-02"
+      }
+    ],
+    "synthetic": true,
+    "signedOn": "2024-05-08",
+    "sizeBand": "LARGE",
+    "csafProviderUrl": "https://halcyon.example/.well-known/csaf/provider-metadata.json",
+    "vdpPolicyUrl": "https://halcyon.example/security/vulnerability-disclosure"
+  },
+  {
+    "id": "brightwater-networks",
+    "canonicalName": "Brightwater Networks",
+    "aliases": [
+      {
+        "kind": "LEGAL_NAME",
+        "value": "Brightwater Networks Corporation",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Legal name on the company imprint.",
+            "url": "https://brightwater.example/legal/imprint"
+          }
+        ]
+      },
+      {
+        "kind": "BRAND",
+        "value": "Brightwater Networks",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Brand used on the company website.",
+            "url": "https://brightwater.example/"
+          }
+        ]
+      },
+      {
+        "kind": "SIGNATORY_LISTING",
+        "value": "Brightwater Networks",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Name as printed on the signer list.",
+            "url": "https://cisa-pledge.example/securebydesign/pledge/secure-design-pledge-signers"
+          }
+        ]
+      },
+      {
+        "kind": "AFFECTED_VENDOR",
+        "value": "Brightwater Networks",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "\"Brightwater Networks\" is used for Brightwater Networks products in CVE affected[] entries.",
+            "url": "https://brightwater.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "CPE_VENDOR",
+        "value": "brightwater",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "CPE vendor namespace used in Brightwater Networks records.",
+            "url": "https://brightwater.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "ADVISORY_DOMAIN",
+        "value": "brightwater.example",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Advisories are published on this domain.",
+            "url": "https://brightwater.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "CNA_SHORT_NAME",
+        "value": "brightwater",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Brightwater Networks is a CNA with this short name.",
+            "url": "https://cve.example/partners"
+          }
+        ]
+      },
+      {
+        "kind": "CNA_ORG_ID",
+        "value": "0e9cc33b-2568-4d58-808f-bfb9778c7742",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "CNA organisation id in the partner list.",
+            "url": "https://cve.example/partners"
+          }
+        ]
+      }
+    ],
+    "signatoryStatus": "UNKNOWN",
+    "category": "NETWORKING",
+    "domains": [
+      "brightwater.example"
+    ],
+    "claims": [],
+    "synthetic": true,
+    "signedOn": "2024-05-08",
+    "csafProviderUrl": "https://brightwater.example/.well-known/csaf/provider-metadata.json",
+    "vdpPolicyUrl": "https://brightwater.example/security/vulnerability-disclosure"
+  },
+  {
+    "id": "cobalt-ridge-software",
+    "canonicalName": "Cobalt Ridge Software",
+    "aliases": [
+      {
+        "kind": "LEGAL_NAME",
+        "value": "Cobalt Ridge Software Ltd",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Legal name on the company imprint.",
+            "url": "https://cobaltridge.example/legal/imprint"
+          }
+        ]
+      },
+      {
+        "kind": "BRAND",
+        "value": "Cobalt Ridge Software",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Brand used on the company website.",
+            "url": "https://cobaltridge.example/"
+          }
+        ]
+      },
+      {
+        "kind": "SIGNATORY_LISTING",
+        "value": "Cobalt Ridge Software",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Name as printed on the signer list.",
+            "url": "https://cisa-pledge.example/securebydesign/pledge/secure-design-pledge-signers"
+          }
+        ]
+      },
+      {
+        "kind": "AFFECTED_VENDOR",
+        "value": "Cobalt Ridge Software",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "\"Cobalt Ridge Software\" is used for Cobalt Ridge Software products in CVE affected[] entries.",
+            "url": "https://cobaltridge.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "CPE_VENDOR",
+        "value": "cobalt_ridge",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "CPE vendor namespace used in Cobalt Ridge Software records.",
+            "url": "https://cobaltridge.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "ADVISORY_DOMAIN",
+        "value": "cobaltridge.example",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Advisories are published on this domain.",
+            "url": "https://cobaltridge.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "CNA_SHORT_NAME",
+        "value": "cobaltridge",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Cobalt Ridge Software is a CNA with this short name.",
+            "url": "https://cve.example/partners"
+          }
+        ]
+      },
+      {
+        "kind": "CNA_ORG_ID",
+        "value": "f4d7f5c0-366b-4e1a-8f4e-2adc32777b79",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "CNA organisation id in the partner list.",
+            "url": "https://cve.example/partners"
+          }
+        ]
+      }
+    ],
+    "signatoryStatus": "UNKNOWN",
+    "category": "DEVELOPER_TOOLS",
+    "domains": [
+      "cobaltridge.example"
+    ],
+    "claims": [],
+    "synthetic": true,
+    "signedOn": "2024-05-08",
+    "csafProviderUrl": "https://cobaltridge.example/.well-known/csaf/provider-metadata.json",
+    "vdpPolicyUrl": "https://cobaltridge.example/security/vulnerability-disclosure"
+  },
+  {
+    "id": "lanternfish-security",
+    "canonicalName": "Lanternfish Security",
+    "aliases": [
+      {
+        "kind": "LEGAL_NAME",
+        "value": "Lanternfish Security, Inc.",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Legal name on the company imprint.",
+            "url": "https://lanternfish.example/legal/imprint"
+          }
+        ]
+      },
+      {
+        "kind": "BRAND",
+        "value": "Lanternfish Security",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Brand used on the company website.",
+            "url": "https://lanternfish.example/"
+          }
+        ]
+      },
+      {
+        "kind": "SIGNATORY_LISTING",
+        "value": "Lanternfish Security",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Name as printed on the signer list.",
+            "url": "https://cisa-pledge.example/securebydesign/pledge/secure-design-pledge-signers"
+          }
+        ]
+      },
+      {
+        "kind": "AFFECTED_VENDOR",
+        "value": "Lanternfish Security",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "\"Lanternfish Security\" is used for Lanternfish Security products in CVE affected[] entries.",
+            "url": "https://lanternfish.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "CPE_VENDOR",
+        "value": "lanternfish",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "CPE vendor namespace used in Lanternfish Security records.",
+            "url": "https://lanternfish.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "ADVISORY_DOMAIN",
+        "value": "lanternfish.example",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Advisories are published on this domain.",
+            "url": "https://lanternfish.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "CNA_SHORT_NAME",
+        "value": "lanternfish",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Lanternfish Security is a CNA with this short name.",
+            "url": "https://cve.example/partners"
+          }
+        ]
+      },
+      {
+        "kind": "CNA_ORG_ID",
+        "value": "109a4784-bd31-4cc0-87a8-66d9a424bd95",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "CNA organisation id in the partner list.",
+            "url": "https://cve.example/partners"
+          }
+        ]
+      }
+    ],
+    "signatoryStatus": "UNKNOWN",
+    "category": "SECURITY",
+    "domains": [
+      "lanternfish.example"
+    ],
+    "claims": [],
+    "synthetic": true,
+    "signedOn": "2024-05-08",
+    "csafProviderUrl": "https://lanternfish.example/.well-known/csaf/provider-metadata.json",
+    "vdpPolicyUrl": "https://lanternfish.example/security/vulnerability-disclosure"
+  },
+  {
+    "id": "quillmark-labs",
+    "canonicalName": "Quillmark Labs",
+    "aliases": [
+      {
+        "kind": "LEGAL_NAME",
+        "value": "Quillmark Labs GmbH",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Legal name on the company imprint.",
+            "url": "https://quillmark.example/legal/imprint"
+          }
+        ]
+      },
+      {
+        "kind": "BRAND",
+        "value": "Quillmark Labs",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Brand used on the company website.",
+            "url": "https://quillmark.example/"
+          }
+        ]
+      },
+      {
+        "kind": "SIGNATORY_LISTING",
+        "value": "Quillmark Labs",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Name as printed on the signer list.",
+            "url": "https://cisa-pledge.example/securebydesign/pledge/secure-design-pledge-signers"
+          }
+        ]
+      },
+      {
+        "kind": "AFFECTED_VENDOR",
+        "value": "Quillmark Labs",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "\"Quillmark Labs\" is used for Quillmark Labs products in CVE affected[] entries.",
+            "url": "https://quillmark.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "CPE_VENDOR",
+        "value": "quillmark",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "CPE vendor namespace used in Quillmark Labs records.",
+            "url": "https://quillmark.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "ADVISORY_DOMAIN",
+        "value": "quillmark.example",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Advisories are published on this domain.",
+            "url": "https://quillmark.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "CNA_SHORT_NAME",
+        "value": "quillmark",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Quillmark Labs is a CNA with this short name.",
+            "url": "https://cve.example/partners"
+          }
+        ]
+      },
+      {
+        "kind": "CNA_ORG_ID",
+        "value": "1595ed66-2243-4f96-8d91-473b1d84b84c",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "CNA organisation id in the partner list.",
+            "url": "https://cve.example/partners"
+          }
+        ]
+      }
+    ],
+    "signatoryStatus": "UNKNOWN",
+    "category": "DEVELOPER_TOOLS",
+    "domains": [
+      "quillmark.example"
+    ],
+    "claims": [],
+    "synthetic": true,
+    "signedOn": "2024-06-20",
+    "region": "Europe",
+    "csafProviderUrl": "https://quillmark.example/.well-known/csaf/provider-metadata.json",
+    "vdpPolicyUrl": "https://quillmark.example/security/vulnerability-disclosure"
+  },
+  {
+    "id": "summit-peak-software",
+    "canonicalName": "Summit Peak Software",
+    "aliases": [
+      {
+        "kind": "LEGAL_NAME",
+        "value": "Summit Peak Software Inc",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Legal name on the company imprint.",
+            "url": "https://summitpeak.example/legal/imprint"
+          }
+        ]
+      },
+      {
+        "kind": "BRAND",
+        "value": "Summit Peak Software",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Brand used on the company website.",
+            "url": "https://summitpeak.example/"
+          }
+        ]
+      },
+      {
+        "kind": "SIGNATORY_LISTING",
+        "value": "Summit Peak Software",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Name as printed on the signer list.",
+            "url": "https://cisa-pledge.example/securebydesign/pledge/secure-design-pledge-signers"
+          }
+        ]
+      },
+      {
+        "kind": "AFFECTED_VENDOR",
+        "value": "Summit Peak Software",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "\"Summit Peak Software\" is used for Summit Peak Software products in CVE affected[] entries.",
+            "url": "https://summitpeak.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "AFFECTED_VENDOR",
+        "value": "Summit",
+        "confidence": "MEDIUM",
+        "evidence": [
+          {
+            "statement": "\"Summit\" is used for Summit Peak Software products in CVE affected[] entries.",
+            "url": "https://summitpeak.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "CPE_VENDOR",
+        "value": "summit_peak",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "CPE vendor namespace used in Summit Peak Software records.",
+            "url": "https://summitpeak.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "ADVISORY_DOMAIN",
+        "value": "summitpeak.example",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Advisories are published on this domain.",
+            "url": "https://summitpeak.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "CNA_SHORT_NAME",
+        "value": "summitpeak",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Summit Peak Software is a CNA with this short name.",
+            "url": "https://cve.example/partners"
+          }
+        ]
+      },
+      {
+        "kind": "CNA_ORG_ID",
+        "value": "f5b01ba2-a770-478d-87bc-bce70f69e312",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "CNA organisation id in the partner list.",
+            "url": "https://cve.example/partners"
+          }
+        ]
+      }
+    ],
+    "signatoryStatus": "UNKNOWN",
+    "category": "ENTERPRISE_SOFTWARE",
+    "domains": [
+      "summitpeak.example"
+    ],
+    "claims": [],
+    "synthetic": true,
+    "signedOn": "2024-05-08",
+    "csafProviderUrl": "https://summitpeak.example/.well-known/csaf/provider-metadata.json",
+    "vdpPolicyUrl": "https://summitpeak.example/security/vulnerability-disclosure"
+  },
+  {
+    "id": "summit-analytics",
+    "canonicalName": "Summit Analytics",
+    "aliases": [
+      {
+        "kind": "LEGAL_NAME",
+        "value": "Summit Analytics Corp.",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Legal name on the company imprint.",
+            "url": "https://summitanalytics.example/legal/imprint"
+          }
+        ]
+      },
+      {
+        "kind": "BRAND",
+        "value": "Summit Analytics",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Brand used on the company website.",
+            "url": "https://summitanalytics.example/"
+          }
+        ]
+      },
+      {
+        "kind": "SIGNATORY_LISTING",
+        "value": "Summit Analytics",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Name as printed on the signer list.",
+            "url": "https://cisa-pledge.example/securebydesign/pledge/secure-design-pledge-signers"
+          }
+        ]
+      },
+      {
+        "kind": "AFFECTED_VENDOR",
+        "value": "Summit Analytics",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "\"Summit Analytics\" is used for Summit Analytics products in CVE affected[] entries.",
+            "url": "https://summitanalytics.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "AFFECTED_VENDOR",
+        "value": "Summit",
+        "confidence": "MEDIUM",
+        "evidence": [
+          {
+            "statement": "\"Summit\" is used for Summit Analytics products in CVE affected[] entries.",
+            "url": "https://summitanalytics.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "CPE_VENDOR",
+        "value": "summit_analytics",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "CPE vendor namespace used in Summit Analytics records.",
+            "url": "https://summitanalytics.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "ADVISORY_DOMAIN",
+        "value": "summitanalytics.example",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Advisories are published on this domain.",
+            "url": "https://summitanalytics.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "CNA_SHORT_NAME",
+        "value": "summitanalytics",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Summit Analytics is a CNA with this short name.",
+            "url": "https://cve.example/partners"
+          }
+        ]
+      },
+      {
+        "kind": "CNA_ORG_ID",
+        "value": "018e7990-97e8-4312-8199-b00105d210ac",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "CNA organisation id in the partner list.",
+            "url": "https://cve.example/partners"
+          }
+        ]
+      }
+    ],
+    "signatoryStatus": "UNKNOWN",
+    "category": "CLOUD",
+    "domains": [
+      "summitanalytics.example"
+    ],
+    "claims": [],
+    "synthetic": true,
+    "signedOn": "2024-08-14",
+    "csafProviderUrl": "https://summitanalytics.example/.well-known/csaf/provider-metadata.json",
+    "vdpPolicyUrl": "https://summitanalytics.example/security/vulnerability-disclosure"
+  },
+  {
+    "id": "ferrous-industrial",
+    "canonicalName": "Ferrous Industrial",
+    "aliases": [
+      {
+        "kind": "LEGAL_NAME",
+        "value": "Ferrous Industrial AG",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Legal name on the company imprint.",
+            "url": "https://ferrous.example/legal/imprint"
+          }
+        ]
+      },
+      {
+        "kind": "BRAND",
+        "value": "Ferrous Industrial",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Brand used on the company website.",
+            "url": "https://ferrous.example/"
+          }
+        ]
+      },
+      {
+        "kind": "SIGNATORY_LISTING",
+        "value": "Ferrous Industrial",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Name as printed on the signer list.",
+            "url": "https://cisa-pledge.example/securebydesign/pledge/secure-design-pledge-signers"
+          }
+        ]
+      },
+      {
+        "kind": "AFFECTED_VENDOR",
+        "value": "Ferrous Industrial",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "\"Ferrous Industrial\" is used for Ferrous Industrial products in CVE affected[] entries.",
+            "url": "https://ferrous.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "CPE_VENDOR",
+        "value": "ferrous",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "CPE vendor namespace used in Ferrous Industrial records.",
+            "url": "https://ferrous.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "CPE_VENDOR",
+        "value": "kestrel",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Ferrous Industrial acquired the Kestrel controller product line and publishes its CPEs under \"kestrel\".",
+            "url": "https://ferrous.example/news/kestrel-acquisition"
+          }
+        ]
+      },
+      {
+        "kind": "ADVISORY_DOMAIN",
+        "value": "ferrous.example",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Advisories are published on this domain.",
+            "url": "https://ferrous.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "CNA_SHORT_NAME",
+        "value": "ferrous",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Ferrous Industrial is a CNA with this short name.",
+            "url": "https://cve.example/partners"
+          }
+        ]
+      },
+      {
+        "kind": "CNA_ORG_ID",
+        "value": "6d3c52a9-7933-4934-87eb-77cb32364045",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "CNA organisation id in the partner list.",
+            "url": "https://cve.example/partners"
+          }
+        ]
+      }
+    ],
+    "signatoryStatus": "UNKNOWN",
+    "category": "INFRASTRUCTURE",
+    "domains": [
+      "ferrous.example"
+    ],
+    "claims": [],
+    "synthetic": true,
+    "signedOn": "2024-05-08",
+    "region": "Europe",
+    "csafProviderUrl": "https://ferrous.example/.well-known/csaf/provider-metadata.json",
+    "vdpPolicyUrl": "https://ferrous.example/security/vulnerability-disclosure"
+  },
+  {
+    "id": "kestrel-controls",
+    "canonicalName": "Kestrel Controls",
+    "aliases": [
+      {
+        "kind": "LEGAL_NAME",
+        "value": "Kestrel Controls, Inc.",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Legal name on the company imprint.",
+            "url": "https://kestrel.example/legal/imprint"
+          }
+        ]
+      },
+      {
+        "kind": "BRAND",
+        "value": "Kestrel Controls",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Brand used on the company website.",
+            "url": "https://kestrel.example/"
+          }
+        ]
+      },
+      {
+        "kind": "SIGNATORY_LISTING",
+        "value": "Kestrel Controls",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Name as printed on the signer list.",
+            "url": "https://cisa-pledge.example/securebydesign/pledge/secure-design-pledge-signers"
+          }
+        ]
+      },
+      {
+        "kind": "AFFECTED_VENDOR",
+        "value": "Kestrel Controls",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "\"Kestrel Controls\" is used for Kestrel Controls products in CVE affected[] entries.",
+            "url": "https://kestrel.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "CPE_VENDOR",
+        "value": "kestrel",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "CPE vendor namespace used in Kestrel Controls records.",
+            "url": "https://kestrel.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "ADVISORY_DOMAIN",
+        "value": "kestrel.example",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Advisories are published on this domain.",
+            "url": "https://kestrel.example/security/advisories"
+          }
+        ]
+      }
+    ],
+    "signatoryStatus": "UNKNOWN",
+    "category": "HARDWARE",
+    "domains": [
+      "kestrel.example"
+    ],
+    "claims": [],
+    "synthetic": true,
+    "signedOn": "2024-09-30",
+    "csafProviderUrl": "https://kestrel.example/.well-known/csaf/provider-metadata.json",
+    "vdpPolicyUrl": "https://kestrel.example/security/vulnerability-disclosure"
+  },
+  {
+    "id": "copperleaf-learning",
+    "canonicalName": "Copperleaf Learning",
+    "aliases": [
+      {
+        "kind": "LEGAL_NAME",
+        "value": "Copperleaf Learning LLC",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Legal name on the company imprint.",
+            "url": "https://copperleaf.example/legal/imprint"
+          }
+        ]
+      },
+      {
+        "kind": "BRAND",
+        "value": "Copperleaf Learning",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Brand used on the company website.",
+            "url": "https://copperleaf.example/"
+          }
+        ]
+      },
+      {
+        "kind": "SIGNATORY_LISTING",
+        "value": "Copperleaf Learning",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Name as printed on the signer list.",
+            "url": "https://cisa-pledge.example/securebydesign/pledge/secure-design-pledge-signers"
+          }
+        ]
+      },
+      {
+        "kind": "AFFECTED_VENDOR",
+        "value": "Copperleaf Learning",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "\"Copperleaf Learning\" is used for Copperleaf Learning products in CVE affected[] entries.",
+            "url": "https://copperleaf.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "CPE_VENDOR",
+        "value": "copperleaf",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "CPE vendor namespace used in Copperleaf Learning records.",
+            "url": "https://copperleaf.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "ADVISORY_DOMAIN",
+        "value": "copperleaf.example",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Advisories are published on this domain.",
+            "url": "https://copperleaf.example/security/advisories"
+          }
+        ]
+      }
+    ],
+    "signatoryStatus": "UNKNOWN",
+    "category": "EDUCATION",
+    "domains": [
+      "copperleaf.example"
+    ],
+    "claims": [],
+    "synthetic": true,
+    "signedOn": "2024-05-08",
+    "sizeBand": "SMALL",
+    "vdpPolicyUrl": "https://copperleaf.example/security/vulnerability-disclosure"
+  },
+  {
+    "id": "tessellate-data",
+    "canonicalName": "Tessellate Data",
+    "aliases": [
+      {
+        "kind": "LEGAL_NAME",
+        "value": "Tessellate Data Corporation",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Legal name on the company imprint.",
+            "url": "https://tessellate.example/legal/imprint"
+          }
+        ]
+      },
+      {
+        "kind": "BRAND",
+        "value": "Tessellate Data",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Brand used on the company website.",
+            "url": "https://tessellate.example/"
+          }
+        ]
+      },
+      {
+        "kind": "SIGNATORY_LISTING",
+        "value": "Tessellate Data",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Name as printed on the signer list.",
+            "url": "https://cisa-pledge.example/securebydesign/pledge/secure-design-pledge-signers"
+          }
+        ]
+      },
+      {
+        "kind": "AFFECTED_VENDOR",
+        "value": "Tessellate Data",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "\"Tessellate Data\" is used for Tessellate Data products in CVE affected[] entries.",
+            "url": "https://tessellate.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "CPE_VENDOR",
+        "value": "tessellate",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "CPE vendor namespace used in Tessellate Data records.",
+            "url": "https://tessellate.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "ADVISORY_DOMAIN",
+        "value": "tessellate.example",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Advisories are published on this domain.",
+            "url": "https://tessellate.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "CNA_SHORT_NAME",
+        "value": "tessellate",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Tessellate Data is a CNA with this short name.",
+            "url": "https://cve.example/partners"
+          }
+        ]
+      },
+      {
+        "kind": "CNA_ORG_ID",
+        "value": "0a88c308-50e9-4dab-877f-29314872f5de",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "CNA organisation id in the partner list.",
+            "url": "https://cve.example/partners"
+          }
+        ]
+      }
+    ],
+    "signatoryStatus": "UNKNOWN",
+    "category": "ENTERPRISE_SOFTWARE",
+    "domains": [
+      "tessellate.example"
+    ],
+    "claims": [],
+    "synthetic": true,
+    "signedOn": "2024-05-08",
+    "csafProviderUrl": "https://tessellate.example/.well-known/csaf/provider-metadata.json",
+    "vdpPolicyUrl": "https://tessellate.example/security/vulnerability-disclosure"
+  },
+  {
+    "id": "gravelpoint-civic",
+    "canonicalName": "Gravelpoint Civic Software",
+    "aliases": [
+      {
+        "kind": "LEGAL_NAME",
+        "value": "Gravelpoint Civic Software, Inc.",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Legal name on the company imprint.",
+            "url": "https://gravelpoint.example/legal/imprint"
+          }
+        ]
+      },
+      {
+        "kind": "BRAND",
+        "value": "Gravelpoint Civic Software",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Brand used on the company website.",
+            "url": "https://gravelpoint.example/"
+          }
+        ]
+      },
+      {
+        "kind": "SIGNATORY_LISTING",
+        "value": "Gravelpoint Civic Software",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Name as printed on the signer list.",
+            "url": "https://cisa-pledge.example/securebydesign/pledge/secure-design-pledge-signers"
+          }
+        ]
+      },
+      {
+        "kind": "AFFECTED_VENDOR",
+        "value": "Gravelpoint Civic Software",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "\"Gravelpoint Civic Software\" is used for Gravelpoint Civic Software products in CVE affected[] entries.",
+            "url": "https://gravelpoint.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "AFFECTED_VENDOR",
+        "value": "Gravelpoint",
+        "confidence": "MEDIUM",
+        "evidence": [
+          {
+            "statement": "\"Gravelpoint\" is used for Gravelpoint Civic Software products in CVE affected[] entries.",
+            "url": "https://gravelpoint.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "CPE_VENDOR",
+        "value": "gravelpoint",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "CPE vendor namespace used in Gravelpoint Civic Software records.",
+            "url": "https://gravelpoint.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "ADVISORY_DOMAIN",
+        "value": "gravelpoint.example",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Advisories are published on this domain.",
+            "url": "https://gravelpoint.example/security/advisories"
+          }
+        ]
+      }
+    ],
+    "signatoryStatus": "UNKNOWN",
+    "category": "PUBLIC_SECTOR",
+    "domains": [
+      "gravelpoint.example"
+    ],
+    "claims": [],
+    "synthetic": true,
+    "signedOn": "2024-05-08",
+    "csafProviderUrl": "https://gravelpoint.example/.well-known/csaf/provider-metadata.json",
+    "vdpPolicyUrl": "https://gravelpoint.example/security/vulnerability-disclosure"
+  },
+  {
+    "id": "orchard-lane-robotics",
+    "canonicalName": "Orchard Lane Robotics",
+    "aliases": [
+      {
+        "kind": "LEGAL_NAME",
+        "value": "Orchard Lane Robotics Ltd.",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Legal name on the company imprint.",
+            "url": "https://orchardlane.example/legal/imprint"
+          }
+        ]
+      },
+      {
+        "kind": "BRAND",
+        "value": "Orchard Lane Robotics",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Brand used on the company website.",
+            "url": "https://orchardlane.example/"
+          }
+        ]
+      },
+      {
+        "kind": "SIGNATORY_LISTING",
+        "value": "Orchard Lane Robotics",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Name as printed on the signer list.",
+            "url": "https://cisa-pledge.example/securebydesign/pledge/secure-design-pledge-signers"
+          }
+        ]
+      },
+      {
+        "kind": "AFFECTED_VENDOR",
+        "value": "Orchard Lane Robotics",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "\"Orchard Lane Robotics\" is used for Orchard Lane Robotics products in CVE affected[] entries.",
+            "url": "https://orchardlane.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "CPE_VENDOR",
+        "value": "orchard_lane",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "CPE vendor namespace used in Orchard Lane Robotics records.",
+            "url": "https://orchardlane.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "ADVISORY_DOMAIN",
+        "value": "orchardlane.example",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Advisories are published on this domain.",
+            "url": "https://orchardlane.example/security/advisories"
+          }
+        ]
+      }
+    ],
+    "signatoryStatus": "UNKNOWN",
+    "category": "HARDWARE",
+    "domains": [
+      "orchardlane.example"
+    ],
+    "claims": [],
+    "synthetic": true,
+    "signedOn": "2024-05-08"
+  },
+  {
+    "id": "saltmarsh-software",
+    "canonicalName": "Saltmarsh Software",
+    "aliases": [
+      {
+        "kind": "LEGAL_NAME",
+        "value": "Saltmarsh Software Inc.",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Legal name on the company imprint.",
+            "url": "https://saltmarsh.example/legal/imprint"
+          }
+        ]
+      },
+      {
+        "kind": "BRAND",
+        "value": "Saltmarsh Software",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Brand used on the company website.",
+            "url": "https://saltmarsh.example/"
+          }
+        ]
+      },
+      {
+        "kind": "SIGNATORY_LISTING",
+        "value": "Saltmarsh Software",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Name as printed on the signer list.",
+            "url": "https://cisa-pledge.example/securebydesign/pledge/secure-design-pledge-signers"
+          }
+        ]
+      },
+      {
+        "kind": "AFFECTED_VENDOR",
+        "value": "Saltmarsh Software",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "\"Saltmarsh Software\" is used for Saltmarsh Software products in CVE affected[] entries.",
+            "url": "https://saltmarsh.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "CPE_VENDOR",
+        "value": "saltmarsh",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "CPE vendor namespace used in Saltmarsh Software records.",
+            "url": "https://saltmarsh.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "ADVISORY_DOMAIN",
+        "value": "saltmarsh.example",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Advisories are published on this domain.",
+            "url": "https://saltmarsh.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "CNA_SHORT_NAME",
+        "value": "saltmarsh",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Saltmarsh Software is a CNA with this short name.",
+            "url": "https://cve.example/partners"
+          }
+        ]
+      },
+      {
+        "kind": "CNA_ORG_ID",
+        "value": "5909f7dd-7551-4472-856d-2c182de77afd",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "CNA organisation id in the partner list.",
+            "url": "https://cve.example/partners"
+          }
+        ]
+      }
+    ],
+    "signatoryStatus": "UNKNOWN",
+    "category": "ENTERPRISE_SOFTWARE",
+    "domains": [
+      "saltmarsh.example"
+    ],
+    "claims": [],
+    "synthetic": true,
+    "signedOn": "2024-05-08",
+    "vdpPolicyUrl": "https://saltmarsh.example/security/vulnerability-disclosure"
+  },
+  {
+    "id": "ember-oak-devices",
+    "canonicalName": "Ember & Oak Devices",
+    "aliases": [
+      {
+        "kind": "LEGAL_NAME",
+        "value": "Ember & Oak Devices, Inc.",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Legal name on the company imprint.",
+            "url": "https://emberoak.example/legal/imprint"
+          }
+        ]
+      },
+      {
+        "kind": "BRAND",
+        "value": "Ember & Oak Devices",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Brand used on the company website.",
+            "url": "https://emberoak.example/"
+          }
+        ]
+      },
+      {
+        "kind": "SIGNATORY_LISTING",
+        "value": "Ember & Oak Devices",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Name as printed on the signer list.",
+            "url": "https://cisa-pledge.example/securebydesign/pledge/secure-design-pledge-signers"
+          }
+        ]
+      },
+      {
+        "kind": "AFFECTED_VENDOR",
+        "value": "Ember & Oak Devices",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "\"Ember & Oak Devices\" is used for Ember & Oak Devices products in CVE affected[] entries.",
+            "url": "https://emberoak.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "CPE_VENDOR",
+        "value": "ember_and_oak",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "CPE vendor namespace used in Ember & Oak Devices records.",
+            "url": "https://emberoak.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "ADVISORY_DOMAIN",
+        "value": "emberoak.example",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Advisories are published on this domain.",
+            "url": "https://emberoak.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "CNA_SHORT_NAME",
+        "value": "emberoak",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Ember & Oak Devices is a CNA with this short name.",
+            "url": "https://cve.example/partners"
+          }
+        ]
+      },
+      {
+        "kind": "CNA_ORG_ID",
+        "value": "d795be64-21ea-4ef8-8092-40bc40d45297",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "CNA organisation id in the partner list.",
+            "url": "https://cve.example/partners"
+          }
+        ]
+      }
+    ],
+    "signatoryStatus": "UNKNOWN",
+    "category": "HARDWARE",
+    "domains": [
+      "emberoak.example"
+    ],
+    "claims": [],
+    "synthetic": true,
+    "signedOn": "2024-05-08",
+    "csafProviderUrl": "https://emberoak.example/.well-known/csaf/provider-metadata.json",
+    "vdpPolicyUrl": "https://emberoak.example/security/vulnerability-disclosure"
+  },
+  {
+    "id": "palisade-mobile",
+    "canonicalName": "Palisade Mobile",
+    "aliases": [
+      {
+        "kind": "LEGAL_NAME",
+        "value": "Palisade Mobile Ltd",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Legal name on the company imprint.",
+            "url": "https://palisade.example/legal/imprint"
+          }
+        ]
+      },
+      {
+        "kind": "BRAND",
+        "value": "Palisade Mobile",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Brand used on the company website.",
+            "url": "https://palisade.example/"
+          }
+        ]
+      },
+      {
+        "kind": "SIGNATORY_LISTING",
+        "value": "Palisade Mobile",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Name as printed on the signer list.",
+            "url": "https://cisa-pledge.example/securebydesign/pledge/secure-design-pledge-signers"
+          }
+        ]
+      },
+      {
+        "kind": "AFFECTED_VENDOR",
+        "value": "Palisade Mobile",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "\"Palisade Mobile\" is used for Palisade Mobile products in CVE affected[] entries.",
+            "url": "https://palisade.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "CPE_VENDOR",
+        "value": "palisade",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "CPE vendor namespace used in Palisade Mobile records.",
+            "url": "https://palisade.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "ADVISORY_DOMAIN",
+        "value": "palisade.example",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Advisories are published on this domain.",
+            "url": "https://palisade.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "CNA_SHORT_NAME",
+        "value": "palisade",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Palisade Mobile is a CNA with this short name.",
+            "url": "https://cve.example/partners"
+          }
+        ]
+      },
+      {
+        "kind": "CNA_ORG_ID",
+        "value": "59483c63-0090-4378-8975-71224d6b0c8b",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "CNA organisation id in the partner list.",
+            "url": "https://cve.example/partners"
+          }
+        ]
+      }
+    ],
+    "signatoryStatus": "UNKNOWN",
+    "category": "SECURITY",
+    "domains": [
+      "palisade.example"
+    ],
+    "claims": [],
+    "synthetic": true,
+    "signedOn": "2024-05-08",
+    "csafProviderUrl": "https://palisade.example/.well-known/csaf/provider-metadata.json",
+    "vdpPolicyUrl": "https://palisade.example/security/vulnerability-disclosure"
+  },
+  {
+    "id": "wrenfield-software",
+    "canonicalName": "Wrenfield Software",
+    "aliases": [
+      {
+        "kind": "LEGAL_NAME",
+        "value": "Wrenfield Software, Inc.",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Legal name on the company imprint.",
+            "url": "https://wrenfield.example/legal/imprint"
+          }
+        ]
+      },
+      {
+        "kind": "BRAND",
+        "value": "Wrenfield Software",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Brand used on the company website.",
+            "url": "https://wrenfield.example/"
+          }
+        ]
+      },
+      {
+        "kind": "SIGNATORY_LISTING",
+        "value": "Wrenfield Software",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Name as printed on the signer list.",
+            "url": "https://cisa-pledge.example/securebydesign/pledge/secure-design-pledge-signers"
+          }
+        ]
+      },
+      {
+        "kind": "AFFECTED_VENDOR",
+        "value": "Wrenfield Software",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "\"Wrenfield Software\" is used for Wrenfield Software products in CVE affected[] entries.",
+            "url": "https://wrenfield.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "CPE_VENDOR",
+        "value": "wrenfield",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "CPE vendor namespace used in Wrenfield Software records.",
+            "url": "https://wrenfield.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "ADVISORY_DOMAIN",
+        "value": "wrenfield.example",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Advisories are published on this domain.",
+            "url": "https://wrenfield.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "CNA_SHORT_NAME",
+        "value": "wrenfield",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Wrenfield Software is a CNA with this short name.",
+            "url": "https://cve.example/partners"
+          }
+        ]
+      },
+      {
+        "kind": "CNA_ORG_ID",
+        "value": "b61d74cd-abff-41a9-817b-2ac325dd9919",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "CNA organisation id in the partner list.",
+            "url": "https://cve.example/partners"
+          }
+        ]
+      }
+    ],
+    "signatoryStatus": "UNKNOWN",
+    "category": "DEVELOPER_TOOLS",
+    "domains": [
+      "wrenfield.example"
+    ],
+    "claims": [],
+    "synthetic": true,
+    "signedOn": "2024-05-08",
+    "csafProviderUrl": "https://wrenfield.example/.well-known/csaf/provider-metadata.json",
+    "vdpPolicyUrl": "https://wrenfield.example/security/vulnerability-disclosure"
+  },
+  {
+    "id": "tinderbox-studio",
+    "canonicalName": "Tinderbox Studio",
+    "aliases": [
+      {
+        "kind": "LEGAL_NAME",
+        "value": "Tinderbox Studio LLC",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Legal name on the company imprint.",
+            "url": "https://tinderbox.example/legal/imprint"
+          }
+        ]
+      },
+      {
+        "kind": "BRAND",
+        "value": "Tinderbox Studio",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Brand used on the company website.",
+            "url": "https://tinderbox.example/"
+          }
+        ]
+      },
+      {
+        "kind": "SIGNATORY_LISTING",
+        "value": "Tinderbox Studio",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Name as printed on the signer list.",
+            "url": "https://cisa-pledge.example/securebydesign/pledge/secure-design-pledge-signers"
+          }
+        ]
+      },
+      {
+        "kind": "AFFECTED_VENDOR",
+        "value": "Tinderbox Studio",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "\"Tinderbox Studio\" is used for Tinderbox Studio products in CVE affected[] entries.",
+            "url": "https://tinderbox.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "CPE_VENDOR",
+        "value": "tinderbox",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "CPE vendor namespace used in Tinderbox Studio records.",
+            "url": "https://tinderbox.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "ADVISORY_DOMAIN",
+        "value": "tinderbox.example",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Advisories are published on this domain.",
+            "url": "https://tinderbox.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "CNA_SHORT_NAME",
+        "value": "tinderbox",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Tinderbox Studio is a CNA with this short name.",
+            "url": "https://cve.example/partners"
+          }
+        ]
+      },
+      {
+        "kind": "CNA_ORG_ID",
+        "value": "a126ba36-4347-405a-812d-0f25d1977b7a",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "CNA organisation id in the partner list.",
+            "url": "https://cve.example/partners"
+          }
+        ]
+      }
+    ],
+    "signatoryStatus": "UNKNOWN",
+    "category": "DEVELOPER_TOOLS",
+    "domains": [
+      "tinderbox.example"
+    ],
+    "claims": [],
+    "synthetic": true,
+    "signedOn": "2024-11-12",
+    "sizeBand": "SMALL",
+    "csafProviderUrl": "https://tinderbox.example/.well-known/csaf/provider-metadata.json",
+    "vdpPolicyUrl": "https://tinderbox.example/security/vulnerability-disclosure"
+  },
+  {
+    "id": "larkspur-cloud",
+    "canonicalName": "Larkspur Cloud Services",
+    "aliases": [
+      {
+        "kind": "LEGAL_NAME",
+        "value": "Larkspur Cloud Services, Inc.",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Legal name on the company imprint.",
+            "url": "https://larkspur.example/legal/imprint"
+          }
+        ]
+      },
+      {
+        "kind": "BRAND",
+        "value": "Larkspur Cloud Services",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Brand used on the company website.",
+            "url": "https://larkspur.example/"
+          }
+        ]
+      },
+      {
+        "kind": "SIGNATORY_LISTING",
+        "value": "Larkspur Cloud Services",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Name as printed on the signer list.",
+            "url": "https://cisa-pledge.example/securebydesign/pledge/secure-design-pledge-signers"
+          }
+        ]
+      },
+      {
+        "kind": "AFFECTED_VENDOR",
+        "value": "Larkspur Cloud Services",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "\"Larkspur Cloud Services\" is used for Larkspur Cloud Services products in CVE affected[] entries.",
+            "url": "https://larkspur.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "CPE_VENDOR",
+        "value": "larkspur",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "CPE vendor namespace used in Larkspur Cloud Services records.",
+            "url": "https://larkspur.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "ADVISORY_DOMAIN",
+        "value": "larkspur.example",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Advisories are published on this domain.",
+            "url": "https://larkspur.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "CNA_SHORT_NAME",
+        "value": "larkspur",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Larkspur Cloud Services is a CNA with this short name.",
+            "url": "https://cve.example/partners"
+          }
+        ]
+      },
+      {
+        "kind": "CNA_ORG_ID",
+        "value": "2c7f82f8-e6ae-4a93-8d5d-59177779344a",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "CNA organisation id in the partner list.",
+            "url": "https://cve.example/partners"
+          }
+        ]
+      }
+    ],
+    "signatoryStatus": "UNKNOWN",
+    "category": "CLOUD",
+    "domains": [
+      "larkspur.example"
+    ],
+    "claims": [],
+    "synthetic": true,
+    "signedOn": "2024-05-08",
+    "csafProviderUrl": "https://larkspur.example/.well-known/csaf/provider-metadata.json",
+    "vdpPolicyUrl": "https://larkspur.example/security/vulnerability-disclosure"
+  },
+  {
+    "id": "foxglove-identity",
+    "canonicalName": "Foxglove Identity",
+    "aliases": [
+      {
+        "kind": "LEGAL_NAME",
+        "value": "Foxglove Identity, Inc.",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Legal name on the company imprint.",
+            "url": "https://foxglove.example/legal/imprint"
+          }
+        ]
+      },
+      {
+        "kind": "BRAND",
+        "value": "Foxglove Identity",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Brand used on the company website.",
+            "url": "https://foxglove.example/"
+          }
+        ]
+      },
+      {
+        "kind": "SIGNATORY_LISTING",
+        "value": "Foxglove Identity",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Name as printed on the signer list.",
+            "url": "https://cisa-pledge.example/securebydesign/pledge/secure-design-pledge-signers"
+          }
+        ]
+      },
+      {
+        "kind": "AFFECTED_VENDOR",
+        "value": "Foxglove Identity",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "\"Foxglove Identity\" is used for Foxglove Identity products in CVE affected[] entries.",
+            "url": "https://foxglove.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "CPE_VENDOR",
+        "value": "foxglove",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "CPE vendor namespace used in Foxglove Identity records.",
+            "url": "https://foxglove.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "ADVISORY_DOMAIN",
+        "value": "foxglove.example",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Advisories are published on this domain.",
+            "url": "https://foxglove.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "CNA_SHORT_NAME",
+        "value": "foxglove",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Foxglove Identity is a CNA with this short name.",
+            "url": "https://cve.example/partners"
+          }
+        ]
+      },
+      {
+        "kind": "CNA_ORG_ID",
+        "value": "a1c51116-b1a2-4a67-8642-c462271a2981",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "CNA organisation id in the partner list.",
+            "url": "https://cve.example/partners"
+          }
+        ]
+      }
+    ],
+    "signatoryStatus": "UNKNOWN",
+    "category": "SECURITY",
+    "domains": [
+      "foxglove.example"
+    ],
+    "claims": [],
+    "synthetic": true,
+    "signedOn": "2025-12-10",
+    "csafProviderUrl": "https://foxglove.example/.well-known/csaf/provider-metadata.json",
+    "vdpPolicyUrl": "https://foxglove.example/security/vulnerability-disclosure"
+  },
+  {
+    "id": "basalt-infrastructure",
+    "canonicalName": "Basalt Infrastructure",
+    "aliases": [
+      {
+        "kind": "LEGAL_NAME",
+        "value": "Basalt Infrastructure Corp",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Legal name on the company imprint.",
+            "url": "https://basalt.example/legal/imprint"
+          }
+        ]
+      },
+      {
+        "kind": "BRAND",
+        "value": "Basalt Infrastructure",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Brand used on the company website.",
+            "url": "https://basalt.example/"
+          }
+        ]
+      },
+      {
+        "kind": "SIGNATORY_LISTING",
+        "value": "Basalt Infrastructure",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Name as printed on the signer list.",
+            "url": "https://cisa-pledge.example/securebydesign/pledge/secure-design-pledge-signers"
+          }
+        ]
+      },
+      {
+        "kind": "AFFECTED_VENDOR",
+        "value": "Basalt Infrastructure",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "\"Basalt Infrastructure\" is used for Basalt Infrastructure products in CVE affected[] entries.",
+            "url": "https://basalt.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "CPE_VENDOR",
+        "value": "basalt",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "CPE vendor namespace used in Basalt Infrastructure records.",
+            "url": "https://basalt.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "ADVISORY_DOMAIN",
+        "value": "basalt.example",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Advisories are published on this domain.",
+            "url": "https://basalt.example/security/advisories"
+          }
+        ]
+      },
+      {
+        "kind": "CNA_SHORT_NAME",
+        "value": "basalt",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "Basalt Infrastructure is a CNA with this short name.",
+            "url": "https://cve.example/partners"
+          }
+        ]
+      },
+      {
+        "kind": "CNA_ORG_ID",
+        "value": "fc68146a-9e75-4c8b-8484-b1e0798e58a2",
+        "confidence": "HIGH",
+        "evidence": [
+          {
+            "statement": "CNA organisation id in the partner list.",
+            "url": "https://cve.example/partners"
+          }
+        ]
+      }
+    ],
+    "signatoryStatus": "UNKNOWN",
+    "category": "INFRASTRUCTURE",
+    "domains": [
+      "basalt.example",
+      "disclosure-platform.example"
+    ],
+    "claims": [],
+    "synthetic": true,
+    "signedOn": "2024-05-08",
+    "csafProviderUrl": "https://basalt.example/.well-known/csaf/provider-metadata.json",
+    "vdpPolicyUrl": "https://disclosure-platform.example/programs/basalt"
+  }
+]
