@@ -4,7 +4,8 @@
 # published run data from one origin. Node 24 runs the TypeScript sources
 # directly (type stripping), so the server has no compile step.
 
-ARG NODE_IMAGE=node:24.21.0-alpine3.24
+# Pinned by digest (multi-arch index of node:24.21.0-alpine3.24); Dependabot updates it.
+ARG NODE_IMAGE=node:24.21.0-alpine3.24@sha256:ebfe2f90462722a7a4de65e91990e97fe0d401c70e0e762c5b53302f905ec1c1
 
 # ---- build: install everything, verify the demo data, build the web app -----
 FROM ${NODE_IMAGE} AS build
