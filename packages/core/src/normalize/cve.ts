@@ -22,8 +22,13 @@ import { arr, canonicalStringify, isObject, isoDate, num, own, str } from './jso
 export const CVE_ID_PATTERN = /^CVE-\d{4}-\d{4,}$/
 export const DEMO_ID_PATTERN = /^DEMO-\d{4}-\d{4,}$/
 
-/** CWE placeholders: present in a record, but stating that no weakness was identified. */
-export const CWE_PLACEHOLDERS: readonly string[] = ['NVD-CWE-noinfo', 'NVD-CWE-Other']
+/**
+ * CWE placeholders: present in a record, but stating that no weakness was
+ * identified. Matched case-insensitively as the whole value or as a prefix
+ * followed by a space or colon ("CWE-noinfo Not enough information", as
+ * CISA-ADP writes it in CVE-2022-0001).
+ */
+export const CWE_PLACEHOLDERS: readonly string[] = ['NVD-CWE-noinfo', 'NVD-CWE-Other', 'CWE-noinfo', 'CWE-Other']
 
 const MAX_TEXT = 500
 const MAX_AFFECTED = 2_000
@@ -40,7 +45,11 @@ const CWE_PREFIX = /^CWE-(\d{1,7})(?=$|[\s:,;(])/i
  */
 export function parseCwe(raw: string): CweRef {
   const text = cleanText(String(raw)).trim().slice(0, MAX_TEXT)
-  const placeholder = CWE_PLACEHOLDERS.find((p) => p.toLowerCase() === text.toLowerCase())
+  const lower = text.toLowerCase()
+  const placeholder = CWE_PLACEHOLDERS.find((p) => {
+    const q = p.toLowerCase()
+    return lower === q || (lower.startsWith(q) && (lower[q.length] === ' ' || lower[q.length] === ':'))
+  })
   if (placeholder) return { raw: text, id: null, placeholder: true }
   const m = CWE_PREFIX.exec(text)
   if (m) {

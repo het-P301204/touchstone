@@ -36,15 +36,15 @@ function collapse(s: string): string {
 
 /**
  * Normalize a company name for exact matching: Unicode NFKC, case-fold, trim,
- * collapse whitespace, then strip trailing corporate suffixes (Inc, LLC, Ltd,
- * Corp, Corporation, GmbH, AG), with or without a trailing period or a
- * preceding comma. A name is never reduced to nothing: "AG" stays "ag".
+ * collapse whitespace, drop trailing periods and commas, then strip trailing
+ * corporate suffixes (Inc, LLC, Ltd, Corp, Corporation, GmbH, AG), with or
+ * without a preceding comma. A name is never reduced to nothing: "AG" stays "ag".
  */
 export function normalizeName(name: string): string {
   let s = collapse(name)
   for (;;) {
     const before = s
-    s = s.replace(/[\s,]+$/, '')
+    s = s.replace(/[\s,.]+$/, '')
     const m = /(?:^|[\s,])([a-z]+)\.?$/.exec(s)
     if (m && CORPORATE_SUFFIXES.includes(m[1]!)) {
       const cut = s.slice(0, m.index).replace(/[\s,]+$/, '')
