@@ -1,0 +1,44 @@
+{
+  "name": "touchstone",
+  "version": "0.1.0",
+  "private": true,
+  "description": "TOUCHSTONE measures publicly observable evidence behind CISA Secure by Design Pledge commitments: what can be measured, the evidence behind each measurement, what cannot be externally verified, and a reproducible run for every number.",
+  "type": "module",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @touchstone/web",
+    "dev:api": "npm run dev -w @touchstone/api",
+    "build": "npm run build -w @touchstone/web",
+    "build:pages": "npm run build:pages -w @touchstone/web",
+    "start": "node apps/api/src/index.ts --production",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p apps/web/tsconfig.json",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "demo:build": "node scripts/build-demo.ts",
+    "demo:check": "node scripts/build-demo.ts --check",
+    "touchstone": "node apps/cli/src/main.ts",
+    "verify": "npm run lint && npm run typecheck && npm run demo:check && npm test && npm run build"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^26.5.1",
+    "eslint": "^10.12.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.6",
+    "fast-check": "^4.10.2",
+    "globals": "^17.12.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.71.0",
+    "vitest": "^5.0.3"
+  }
+}

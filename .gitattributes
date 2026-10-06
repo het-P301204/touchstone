@@ -1,0 +1,7 @@
+* text=auto eol=lf
+*.png binary
+*.ico binary
+*.pdf binary
+*.woff2 binary
+fixtures/adversarial/invalid-utf8.L5X binary
+fixtures/adversarial/*.bin binary

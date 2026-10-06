@@ -1,0 +1,8 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2023", "DOM"],
+    "types": ["node"]
+  },
+  "include": ["packages/*/src", "packages/*/test", "apps/api/src", "apps/api/test", "apps/cli/src", "apps/cli/test", "tests", "scripts", "fixtures/**/*.ts"]
+}

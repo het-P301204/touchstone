@@ -1,0 +1,12 @@
+{
+  "name": "@touchstone/core",
+  "version": "0.1.0",
+  "private": true,
+  "description": "TOUCHSTONE measurement engine: goal model, methodology versions, CVE normalization, vendor identity resolution, CVE attribution, VDP assessment, metrics, assessments, evidence ledger, runs, cohort benchmarks, anomaly and change detection, reports. Deterministic; no I/O, no clock, no network.",
+  "type": "module",
+  "license": "Apache-2.0",
+  "exports": {
+    ".": "./src/index.ts",
+    "./model": "./src/model/index.ts"
+  }
+}

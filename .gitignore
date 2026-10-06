@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.data/
+.touchstone/
+coverage/
+test-results/
+playwright-report/
+*.log
+.env
+.env.*
+!.env.example
+*.tsbuildinfo
+.DS_Store
+.playwright-mcp/
+.claude/
+.ref/
+BUILD-CONTRACT.md

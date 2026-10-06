@@ -1,0 +1,15 @@
+{
+  "name": "@touchstone/cli",
+  "version": "0.1.0",
+  "private": true,
+  "description": "TOUCHSTONE command line: run, reproduce, collect, export.",
+  "type": "module",
+  "license": "Apache-2.0",
+  "bin": {
+    "touchstone": "./src/main.ts"
+  },
+  "dependencies": {
+    "@touchstone/collect": "*",
+    "@touchstone/core": "*"
+  }
+}

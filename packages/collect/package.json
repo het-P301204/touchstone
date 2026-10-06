@@ -1,0 +1,14 @@
+{
+  "name": "@touchstone/collect",
+  "version": "0.1.0",
+  "private": true,
+  "description": "TOUCHSTONE public-source collectors: SSRF-safe outbound fetch, CISA signatory list, CVE records, CSAF advisories, security.txt and VDP pages. Writes content-addressed snapshots. Node only.",
+  "type": "module",
+  "license": "Apache-2.0",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@touchstone/core": "*"
+  }
+}

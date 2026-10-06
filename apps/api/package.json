@@ -1,0 +1,19 @@
+{
+  "name": "@touchstone/api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "TOUCHSTONE REST API: signatories, vendors, goals, evidence, CVEs, runs, methodology, refresh and the dispute workflow.",
+  "type": "module",
+  "license": "Apache-2.0",
+  "scripts": {
+    "dev": "node --watch-path=src --watch-path=../../packages/core/src --watch-path=../../packages/collect/src src/index.ts",
+    "start": "node src/index.ts --production"
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.1.3",
+    "@touchstone/collect": "*",
+    "@touchstone/core": "*",
+    "hono": "^4.13.13",
+    "zod": "^4.6.5"
+  }
+}
