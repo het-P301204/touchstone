@@ -69,7 +69,10 @@ Usage
   touchstone goals [--format text|json]
         The seven pledge goals and whether each is externally verifiable.
   touchstone collect --live --vendor <id>[,<id>...] --registry <file> --out <dir>
-        Collect live public sources (network). Refuses to run without --live.
+                   [--enumerate-nvd] [--cve <id>[,<id>...]] [--max-cves <n>]
+        Collect live public sources (network) and score them locally. Refuses to
+        run without --live. --enumerate-nvd lists the vendor's CVE ids from the
+        NVD API by CNA org id (one request per 6.5 s without an API key).
 
 Options
   --data <dir>     published data directory (default apps/web/public/data)
@@ -94,10 +97,10 @@ const VALUE_OPTIONS: Record<string, string[]> = {
   export: ['--format', '--out', '--run', '--data'],
   methodology: ['--version'],
   goals: ['--format'],
-  collect: ['--vendor', '--registry', '--out'],
+  collect: ['--vendor', '--registry', '--out', '--cve', '--max-cves'],
 }
 const FLAG_OPTIONS: Record<string, string[]> = {
-  collect: ['--live'],
+  collect: ['--live', '--enumerate-nvd'],
 }
 const COMMANDS = Object.keys(VALUE_OPTIONS)
 
@@ -474,7 +477,23 @@ async function cmdCollect(o: Opts, io: Io): Promise<number> {
   }
   io.err(io.s.yellow(`Collecting live public sources for ${vendors.map(term).join(', ')}. This makes network requests.`))
   const outDir = resolve(out)
-  const { errors, ...inputs } = await collect.collectLive({ vendorIds: vendors, registryPath: resolve(registry), outDir })
+  const cveList = (o.values.get('--cve') ?? '')
+    .split(',')
+    .map((x) => x.trim().toUpperCase())
+    .filter(Boolean)
+  for (const id of cveList) if (!/^CVE-\d{4}-\d{4,7}$/.test(id)) throw new CliError(`"${term(id)}" is not a CVE id.`)
+  if (cveList.length && vendors.length !== 1) throw new CliError('--cve needs exactly one --vendor (the ids are attributed by the engine, not by this flag).')
+  const maxRaw = o.values.get('--max-cves')
+  const maxCves = maxRaw === undefined ? undefined : Number(maxRaw)
+  if (maxCves !== undefined && (!Number.isInteger(maxCves) || maxCves < 1 || maxCves > 5000)) throw new CliError('--max-cves must be an integer from 1 to 5000.')
+  const { errors, ...inputs } = await collect.collectLive({
+    vendorIds: vendors,
+    registryPath: resolve(registry),
+    outDir,
+    enumerateNvd: o.flags.has('--enumerate-nvd'),
+    ...(cveList.length ? { cveIds: { [vendors[0]!]: cveList } } : {}),
+    ...(maxCves !== undefined ? { maxCvesPerVendor: maxCves } : {}),
+  })
   mkdirSync(outDir, { recursive: true })
   const inputsPath = join(outDir, 'inputs.json')
   writeFileSync(inputsPath, JSON.stringify(inputs) + '\n')
@@ -489,6 +508,23 @@ async function cmdCollect(o: Opts, io: Io): Promise<number> {
     for (const e of errors.slice(0, 20)) io.out(`  ${term(e)}`)
   }
   io.out(`Inputs      ${term(inputsPath)}`)
+
+  // Score the collected inputs locally, exactly as a published run would be scored.
+  const e = await engine()
+  const run = e.executeRun(inputs)
+  const man = run.manifest
+  writeFileSync(join(outDir, 'manifest.json'), `${JSON.stringify(man, null, 2)}\n`)
+  io.out('')
+  io.out(`${s.bold('Run')}         ${term(man.runId)}  ${s.dim(`(LIVE, methodology ${term(man.methodologyVersion)})`)}`)
+  io.out(`Outputs     ${term(man.outputsHash)}`)
+  for (const v of run.vendors) {
+    io.out('')
+    io.out(s.bold(term(v.vendor.canonicalName)))
+    for (const g of v.goals) io.out(`  ${pad(term(g.goalId), 4)} ${pad(term(g.status), 26)} ${s.dim(term(g.statusReason))}`)
+    for (const d of v.dimensions) io.out(`  ${pad(term(d.dimension), 15)} ${d.value === null ? s.dim('not measured') : `${d.value.toFixed(1)}`}`)
+    io.out(`  Evidence coverage ${v.coverage.percent.toFixed(0)}% (${v.coverage.observedSlots}/${v.coverage.totalSlots} slots)`)
+  }
+  io.out('')
   io.out(s.dim('Snapshots are content-addressed under the output directory. Nothing is published automatically.'))
   return EXIT.OK
 }

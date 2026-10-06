@@ -125,7 +125,12 @@ export async function collectLive(opts: CollectLiveOptions): Promise<CollectLive
         errors.push(...e.errors.map((x) => `${v.id} nvd: ${x}`))
       }
     }
-    for (const id of [...ids].sort().slice(0, opts.maxCvesPerVendor ?? 500)) {
+    // A cap shrinks the denominator of every CVE metric, so it is never silent.
+    const cap = opts.maxCvesPerVendor ?? 500
+    if (ids.size > cap) {
+      errors.push(`${v.id}: collected ${cap} of ${ids.size} candidate CVE ids (cap reached); CVE metrics describe this sample, not the full window`)
+    }
+    for (const id of [...ids].sort().slice(0, cap)) {
       const r = await collectCveRecord(ctx, id)
       snapshots.push(...r.snapshots)
       if (r.record) cves.push(r.record)

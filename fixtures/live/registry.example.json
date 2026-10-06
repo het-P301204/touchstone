@@ -1,0 +1,55 @@
+[
+  {
+    "id": "axis-communications",
+    "canonicalName": "Axis Communications",
+    "aliases": [
+      {
+        "kind": "SIGNATORY_LISTING",
+        "value": "Axis Communications",
+        "confidence": "HIGH",
+        "evidence": [{ "statement": "Name as printed on the CISA Secure by Design Pledge signer list (checked 2026-10-06).", "url": "https://www.cisa.gov/securebydesign/pledge/secure-design-pledge-signers" }]
+      },
+      {
+        "kind": "AFFECTED_VENDOR",
+        "value": "Axis Communications AB",
+        "confidence": "HIGH",
+        "evidence": [{ "statement": "Vendor string in containers.cna.affected of CVE-2026-0541, assigned by the Axis CNA.", "url": "https://cveawg.mitre.org/api/cve/CVE-2026-0541" }]
+      },
+      {
+        "kind": "CNA_SHORT_NAME",
+        "value": "Axis",
+        "confidence": "HIGH",
+        "evidence": [{ "statement": "cveMetadata.assignerShortName of CVE-2026-0541.", "url": "https://cveawg.mitre.org/api/cve/CVE-2026-0541" }]
+      },
+      {
+        "kind": "CNA_ORG_ID",
+        "value": "f2daf9a0-02c2-4b83-a01d-63b3b304b807",
+        "confidence": "HIGH",
+        "evidence": [{ "statement": "cveMetadata.assignerOrgId of CVE-2026-0541; NVD accepts it as sourceIdentifier.", "url": "https://cveawg.mitre.org/api/cve/CVE-2026-0541" }]
+      },
+      {
+        "kind": "CPE_VENDOR",
+        "value": "axis",
+        "confidence": "HIGH",
+        "evidence": [{ "statement": "CPE vendor field in NVD configurations for Axis CVE records (cpe:2.3:o:axis:axis_os).", "url": "https://services.nvd.nist.gov/rest/json/cves/2.0?cveId=CVE-2025-0324" }]
+      },
+      {
+        "kind": "CPE_VENDOR",
+        "value": "axis_communications_ab",
+        "confidence": "MEDIUM",
+        "evidence": [{ "statement": "CPE vendor field the Axis CNA itself writes in containers.cna.affected[].cpes (e.g. cpe:2.3:a:axis_communications_ab:axis_os). It differs from the NVD dictionary vendor 'axis'; registering both is a disputable registry decision.", "url": "https://cveawg.mitre.org/api/cve/CVE-2026-0541" }]
+      },
+      {
+        "kind": "ADVISORY_DOMAIN",
+        "value": "www.axis.com",
+        "confidence": "HIGH",
+        "evidence": [{ "statement": "security.txt Canonical: https://www.axis.com/.well-known/security.txt", "url": "https://www.axis.com/.well-known/security.txt" }]
+      }
+    ],
+    "signatoryStatus": "LISTED",
+    "category": "HARDWARE",
+    "domains": ["www.axis.com", "axis.com"],
+    "claims": [],
+    "synthetic": false
+  }
+]
