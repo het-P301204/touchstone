@@ -6,8 +6,8 @@
   "type": "module",
   "license": "Apache-2.0",
   "scripts": {
-    "dev": "node --watch-path=src --watch-path=../../packages/core/src --watch-path=../../packages/collect/src src/index.ts",
-    "start": "node src/index.ts --production"
+    "dev": "node --env-file-if-exists=../../.env --watch-path=src --watch-path=../../packages/core/src --watch-path=../../packages/collect/src src/index.ts",
+    "start": "node --env-file-if-exists=../../.env src/index.ts --production"
   },
   "dependencies": {
     "@hono/node-server": "^2.1.3",
