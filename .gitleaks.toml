@@ -1,0 +1,8 @@
+# gitleaks configuration: the default rule set, unchanged. TOUCHSTONE stores no
+# credentials in the repository; the only secret it knows about is the optional
+# TOUCHSTONE_ADMIN_TOKEN, which comes from the environment. Add an allowlist entry
+# here only for a confirmed false positive, with a comment naming the file.
+title = "TOUCHSTONE"
+
+[extend]
+useDefault = true

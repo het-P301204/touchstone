@@ -1,0 +1,19 @@
+# Keep secrets, local databases, VCS data and build output out of the build context.
+.git
+.github
+.env
+.env.*
+!.env.example
+.data
+.touchstone
+.claude
+.playwright-mcp
+**/node_modules
+**/dist
+test-results
+playwright-report
+coverage
+docs/screenshots
+*.log
+Dockerfile
+docker-compose.yml

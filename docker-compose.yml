@@ -1,0 +1,39 @@
+# TOUCHSTONE: the API serving the built web app, with a persistent SQLite
+# volume for disputes, the research notebook and refresh jobs.
+#   cp .env.example .env          # optional: set TOUCHSTONE_ADMIN_TOKEN etc.
+#   docker compose up --build
+#   open http://127.0.0.1:8787
+#
+# The port is published on loopback only. Put a TLS-terminating reverse proxy
+# in front before exposing it, and set TOUCHSTONE_ALLOWED_HOSTS for that name.
+
+name: touchstone
+
+services:
+  touchstone:
+    build: .
+    image: touchstone:local
+    environment:
+      TOUCHSTONE_ADMIN_TOKEN: ${TOUCHSTONE_ADMIN_TOKEN:-}
+      TOUCHSTONE_ALLOWED_HOSTS: ${TOUCHSTONE_ALLOWED_HOSTS:-127.0.0.1,localhost}
+      TOUCHSTONE_TRUST_PROXY: ${TOUCHSTONE_TRUST_PROXY:-false}
+      TOUCHSTONE_RATE_LIMIT_PER_MINUTE: ${TOUCHSTONE_RATE_LIMIT_PER_MINUTE:-300}
+      TOUCHSTONE_DISPUTE_RATE_LIMIT_PER_HOUR: ${TOUCHSTONE_DISPUTE_RATE_LIMIT_PER_HOUR:-10}
+      TOUCHSTONE_LOG_LEVEL: ${TOUCHSTONE_LOG_LEVEL:-info}
+    ports:
+      - "127.0.0.1:8787:8787"
+    volumes:
+      - touchstone-data:/data
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    mem_limit: 1g
+    pids_limit: 256
+    restart: unless-stopped
+
+volumes:
+  touchstone-data:

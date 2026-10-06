@@ -1,0 +1,202 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: lint · typecheck · data · tests · build · CLI · API smoke
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Lint
+        run: npm run lint
+      - name: Type check
+        run: npm run typecheck
+      - name: Data tests (demo snapshots and published runs match their generators)
+        run: npm run demo:check
+      - name: Unit, scoring regression, adversarial, API and CLI tests
+        run: npm test
+      - name: Production build
+        run: npm run build
+      - name: CLI smoke test
+        run: |
+          set -u
+          cli="node apps/cli/src/main.ts"
+          $cli --version
+          $cli goals > /dev/null
+          $cli methodology > /dev/null
+          # Every published run reproduces from its own inputs and methodology.
+          for run in $(node -e "for (const r of require('./apps/web/public/data/index.json').runs) console.log(r.runId)"); do
+            $cli reproduce "$run"
+          done
+          vendor=$(node -e "const i=require('./apps/web/public/data/index.json');const s=require('./apps/web/public/data/runs/'+i.latestRunId+'/summary.json');console.log(s.vendors[0].vendor.id)")
+          for f in md csv json pdf; do $cli export "$vendor" --format "$f" --out "report.$f"; done
+          test -s report.pdf && head -c 5 report.pdf | grep -q '%PDF-'
+          # Live collection must refuse to run without the explicit flag.
+          set +e
+          $cli collect --vendor "$vendor" > /dev/null 2>&1
+          code=$?
+          set -e
+          if [ "$code" -eq 0 ]; then echo "collect without --live must fail"; exit 1; fi
+      - name: API smoke test against the production server
+        env:
+          PORT: '8799'
+          HOST: 127.0.0.1
+          TOUCHSTONE_DB: ':memory:'
+          TOUCHSTONE_LOG_LEVEL: warn
+        run: |
+          node apps/api/src/index.ts --production &
+          for i in $(seq 1 40); do curl -fsS http://127.0.0.1:8799/api/health > /dev/null && break; sleep 1; done
+          node scripts/smoke.ts http://127.0.0.1:8799
+      - uses: actions/upload-artifact@v7
+        with:
+          name: web-dist
+          path: apps/web/dist
+          retention-days: 7
+
+  e2e:
+    name: end-to-end (Playwright)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    needs: verify
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+      - run: npm run test:e2e
+      - if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: |
+            playwright-report
+            test-results
+          retention-days: 7
+
+  dependency-audit:
+    name: dependency audit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - name: npm audit (production dependencies, high and above)
+        run: npm audit --omit=dev --audit-level=high
+      - name: Lockfile integrity without install scripts
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+  container:
+    name: container build · smoke · SBOM · scan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    needs: verify
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - uses: docker/setup-buildx-action@v4
+      - name: Build image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          load: true
+          tags: touchstone:ci
+      - name: Run the container, wait for health, smoke test
+        run: |
+          docker run -d --name touchstone -p 8787:8787 --read-only --tmpfs /tmp \
+            --security-opt no-new-privileges:true --cap-drop ALL \
+            -e TOUCHSTONE_DB=:memory: touchstone:ci
+          for i in $(seq 1 40); do curl -fsS http://127.0.0.1:8787/api/health && break; sleep 1; done
+          echo
+          test "$(docker inspect -f '{{.Config.User}}' touchstone)" = "node"
+          for i in $(seq 1 30); do
+            s=$(docker inspect -f '{{.State.Health.Status}}' touchstone)
+            [ "$s" = "healthy" ] && break
+            sleep 2
+          done
+          docker inspect -f 'container health: {{.State.Health.Status}}' touchstone
+          test "$(docker inspect -f '{{.State.Health.Status}}' touchstone)" = "healthy"
+          node scripts/smoke.ts http://127.0.0.1:8787
+      - name: Container logs
+        if: always()
+        run: docker logs touchstone || true
+      - name: Stop container
+        if: always()
+        run: docker rm -f touchstone || true
+      - name: SBOM (SPDX)
+        uses: anchore/sbom-action@v0
+        with:
+          image: touchstone:ci
+          format: spdx-json
+          output-file: touchstone-sbom.spdx.json
+      - name: Scan image (Trivy)
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: touchstone:ci
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: '1'
+          format: sarif
+          output: trivy.sarif
+      - if: always()
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: trivy.sarif
+          category: trivy
+      - uses: actions/upload-artifact@v7
+        with:
+          name: sbom
+          path: touchstone-sbom.spdx.json
+
+  secrets:
+    name: secret scanning
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      # The CLI scans the full history; gitleaks-action diffs from the root
+      # commit's parent, which does not exist on a repository's first push.
+      - name: gitleaks (full history)
+        env:
+          GITLEAKS_VERSION: 8.30.1
+        run: |
+          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" | tar xz gitleaks
+          ./gitleaks git --config .gitleaks.toml --redact --verbose --exit-code 1 .

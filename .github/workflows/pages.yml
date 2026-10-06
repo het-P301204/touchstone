@@ -1,0 +1,56 @@
+# Publishes the web app to GitHub Pages with the bundled synthetic demo dataset.
+# The app reads published run data (JSON) and reproduces runs in the browser,
+# so the static site is fully functional without the API.
+name: pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: build static site
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Published demo data matches its generator
+        run: npm run demo:check
+      - name: Build for Pages (base /touchstone/)
+        run: npm run build:pages
+      - name: SPA fallback for deep links
+        run: test -f apps/web/dist/404.html || cp apps/web/dist/index.html apps/web/dist/404.html
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: apps/web/dist
+
+  deploy:
+    name: deploy
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5
