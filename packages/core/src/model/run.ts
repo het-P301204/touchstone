@@ -48,6 +48,10 @@ export type MethodologyParameters = {
   /** LATENCY_OUTLIER fires when current median latency exceeds historical median by this factor AND by at least minDays. */
   latencyOutlierFactor: number
   latencyOutlierMinDays: number
+  /** Policies with fewer extracted words are TOO_SHORT: assessed, but G5 is at most PARTIAL. */
+  vdpMinimumPolicyWords: number
+  /** Minimum high-impact advisories before timeliness metrics are reported (else BELOW_MINIMUM_SAMPLE). */
+  minimumHighImpactAdvisories: number
 }
 
 export type MethodologyVersion = {

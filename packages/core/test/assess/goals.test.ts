@@ -44,7 +44,7 @@ describe('G5 status rule', () => {
     expect(assessG5(base([])).status).toBe('NOT_VERIFIED')
   })
   it('DATA_ERROR when the policy could not be retrieved and nothing was carried', () => {
-    expect(assessG5(base([], { vdp: makeVdp('northwind', {}, { default: 'UNKNOWN', found: false }) })).status).toBe('DATA_ERROR')
+    expect(assessG5(base([], { vdp: makeVdp('northwind', {}, { default: 'UNKNOWN', found: true, retrieval: 'FETCH_FAILED' }) })).status).toBe('DATA_ERROR')
     // a carried-forward observation is not a data error
     expect(assessG5(base([], { vdp: makeVdp('northwind', {}, { carriedFrom: 'SN-old' }) })).status).toBe('VERIFIED')
   })
@@ -61,6 +61,17 @@ describe('G6 status rule', () => {
     expect(r.status).toBe('NOT_VERIFIED')
     expect(r.reason).toContain('minimum sample of 5')
   })
+  it('neither part measured: NOT_VERIFIED only for sample reasons, DATA_ERROR for a mapping problem, reason names it', () => {
+    const none = assessG6(base([mv('cve.complete_records', null, { gap: 'NO_ELIGIBLE_RECORDS' }), mv('cve.timely_issuance', null, { gap: 'NO_ELIGIBLE_RECORDS' })]))
+    expect(none.status).toBe('NOT_VERIFIED')
+    expect(none.reason).toContain('no high-impact advisories in the window')
+    const mapping = assessG6(base([mv('cve.complete_records', null, { gap: 'NOT_APPLICABLE' }), mv('cve.timely_issuance', null, { gap: 'NO_SOURCE' })]))
+    expect(mapping.status).toBe('DATA_ERROR')
+    expect(mapping.reason).toContain('no CPE vendor namespace')
+    // records measurable but timeliness not: PARTIAL, never NOT_VERIFIED
+    expect(assessG6(base([mv('cve.complete_records', 40), mv('cve.timely_issuance', null, { gap: 'NO_SOURCE' })])).status).toBe('PARTIAL')
+  })
+
   it('DATA_ERROR when the CVE source failed with no earlier snapshot', () => {
     expect(assessG6(base([mv('cve.complete_records', null, { gap: 'SOURCE_FAILED' })], { cveSourceFailed: true })).status).toBe('DATA_ERROR')
   })

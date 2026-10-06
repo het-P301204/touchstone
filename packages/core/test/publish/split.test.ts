@@ -16,7 +16,7 @@ describe('splitForPublication', () => {
     expect(summary.vendors.map((v) => v.vendor.id)).toEqual(out.vendors.map((v) => v.vendor.id))
     const nw = summary.vendors.find((v) => v.vendor.id === 'northwind')!
     expect(nw.cveCount).toBe(10)
-    expect(nw.advisoryCount).toBe(2)
+    expect(nw.advisoryCount).toBe(5)
     expect(nw.statusCounts).toEqual({ VERIFIED: 2, PARTIAL: 0, NOT_VERIFIED: 1, NOT_EXTERNALLY_VERIFIABLE: 4, DATA_ERROR: 0 })
     expect(nw.goals[0]).not.toHaveProperty('evidenceIds')
     expect(nw.goals.find((g) => g.goalId === 'G6')!.evidenceCount).toBeGreaterThan(0)

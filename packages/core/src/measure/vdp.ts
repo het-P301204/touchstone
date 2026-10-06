@@ -35,10 +35,16 @@ export function criterionCredit(s: CriterionState): number {
  */
 export function vdpRetrievalFailed(obs: VdpObservation): boolean {
   if (obs.carriedFromSnapshotId) return false
-  // Per the pipeline contract (assessVdp), pledge criteria are UNKNOWN only
-  // when the policy could not be read; a policy that does not exist yields NOT_MET.
+  const r = (obs.policy as { retrieval?: string }).retrieval
+  if (r !== undefined) return r === 'FETCH_FAILED' || r === 'UNREADABLE'
+  // Observations without a retrieval field (older data): all four pledge criteria UNKNOWN.
   const states = criteriaStates(obs)
   return PLEDGE_VDP_CRITERIA.every((c) => states.get(c)!.state === 'UNKNOWN')
+}
+
+/** The policy text was read but is below the methodology's plausibility floor (vdpMinimumPolicyWords). */
+export function vdpTooShort(obs: VdpObservation): boolean {
+  return (obs.policy as { retrieval?: string }).retrieval === 'TOO_SHORT'
 }
 
 export type VdpResult = { metrics: MetricValue[]; criterionEvidence: Map<VdpCriterionId, string> }
@@ -107,6 +113,8 @@ export function measureVdp(ctx: MeasureContext): VdpResult {
   const tally = (): ConfidenceTally => {
     const t = new ConfidenceTally()
     if (carried) t.fire('C4.CARRIED', `VDP observation carried forward from snapshot ${obs.carriedFromSnapshotId}.`)
+    if (vdpTooShort(obs))
+      t.fire('C7.TOO_SHORT', `The policy text read has ${obs.policy.wordCount ?? '?'} words, below the methodology plausibility floor of ${ctx.methodology.parameters.vdpMinimumPolicyWords} words.`)
     t.freshness([src.freshness, txtSrc?.freshness])
     return t
   }
@@ -116,11 +124,23 @@ export function measureVdp(ctx: MeasureContext): VdpResult {
   const metrics: MetricValue[] = []
   const failed = vdpRetrievalFailed(obs)
 
+  if (failed) {
+    // A policy that could not be read is a retrieval problem, not a content finding:
+    // both figures are null, whatever security.txt alone would allow.
+    const reason = `The policy could not be read (${(obs.policy as { retrieval?: string }).retrieval ?? 'retrieval problem'}) and no earlier snapshot was carried forward.`
+    return {
+      criterionEvidence,
+      metrics: ['vdp.criteria_met', 'vdp.pledge_elements_met'].map((metricId) =>
+        absentMetric({ metricId, gap: 'SOURCE_FAILED', reason, query, tally: tally(), breakdown: { ...counts } }),
+      ),
+    }
+  }
+
   if (unknown.length === VDP_CRITERIA.length) {
     metrics.push(
       absentMetric({
         metricId: 'vdp.criteria_met',
-        gap: failed ? 'SOURCE_FAILED' : 'NO_SOURCE',
+        gap: 'NO_SOURCE',
         reason: 'No VDP criterion could be determined.',
         query,
         tally: tally(),
@@ -151,7 +171,7 @@ export function measureVdp(ctx: MeasureContext): VdpResult {
     metrics.push(
       absentMetric({
         metricId: 'vdp.pledge_elements_met',
-        gap: failed ? 'SOURCE_FAILED' : 'NO_SOURCE',
+        gap: 'NO_SOURCE',
         reason: 'None of the four pledge elements could be determined.',
         query,
         tally: tally(),

@@ -179,7 +179,7 @@ export const GOALS: SecurityCommitmentGoal[] = [
         'cve.publication_latency',
       ],
       statusRule:
-        'VERIFIED when every eligible record is complete (the pledge says "every") AND every high-impact advisory has a CVE published within the methodology tolerance. PARTIAL when either dimension has evidence but falls short. NOT_VERIFIED when there are fewer eligible records than the minimum sample and no high-impact advisories. DATA_ERROR when the CVE source failed with no earlier snapshot.',
+        'DATA_ERROR when the CVE source failed with no earlier snapshot. VERIFIED when every eligible record is complete (the pledge says "every") AND every high-impact advisory has a CVE published within the methodology tolerance, over at least the minimum number of high-impact advisories. PARTIAL when either dimension has evidence but falls short (including timeliness measured on fewer advisories than the minimum). When neither dimension can be measured: NOT_VERIFIED when the records are below the minimum sample (or there are none) AND there are no high-impact advisories to measure (no advisory feed, or none in the window); DATA_ERROR when a source or mapping problem prevents measurement (for example no CPE vendor namespace is registered, so completeness cannot be checked).',
       evidenceNeeded: [],
       limitations: [
         'Third-party enrichment (CISA-ADP, NVD) is reported but not credited to the vendor.',

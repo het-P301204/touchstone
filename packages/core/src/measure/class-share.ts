@@ -82,9 +82,10 @@ export function measureClassShare(ctx: MeasureContext): MetricValue {
   if (mediumAttribution > 0) t.fire('C1.ATTRIBUTION', `${mediumAttribution} contributing records were attributed by affected-vendor name only.`)
   t.freshness(familyFreshness(ctx, 'CVE_PROGRAM'))
   const breakdown: Record<string, number> = { prior_records: prior.n, latest_records: latest.n, prior_in_tracked: prior.inAny, latest_in_tracked: latest.inAny }
+  // A period with no records has no share: the key is omitted (never reported as 0%).
   for (const c of TRACKED_CWE_CLASSES) {
-    breakdown[`prior_share_pct.${c.id}`] = prior.n ? percent(prior.byClass[c.id]!, prior.n) : 0
-    breakdown[`latest_share_pct.${c.id}`] = latest.n ? percent(latest.byClass[c.id]!, latest.n) : 0
+    if (prior.n) breakdown[`prior_share_pct.${c.id}`] = percent(prior.byClass[c.id]!, prior.n)
+    if (latest.n) breakdown[`latest_share_pct.${c.id}`] = percent(latest.byClass[c.id]!, latest.n)
   }
   if (prior.n < min || latest.n < min) {
     const m = absentMetric({

@@ -322,4 +322,5 @@ export const CONFIDENCE_RULES: { id: string; cap: 'MEDIUM' | 'LOW'; rule: string
   { id: 'C4.CARRIED', cap: 'MEDIUM', rule: 'The observation was carried forward from an earlier snapshot after a refresh did not succeed.' },
   { id: 'C5.UNDETERMINED', cap: 'MEDIUM', rule: 'Part of the input could not be determined (UNKNOWN criteria are counted as 0).' },
   { id: 'C6.NOT_MEASURED', cap: 'LOW', rule: 'No value could be measured.' },
+  { id: 'C7.TOO_SHORT', cap: 'LOW', rule: 'The policy text read is shorter than vdpMinimumPolicyWords; the goal is capped at PARTIAL.' },
 ]

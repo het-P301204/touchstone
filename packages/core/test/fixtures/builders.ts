@@ -168,7 +168,15 @@ const ALL_CRITERIA: VdpCriterionId[] = [
 export function makeVdp(
   vendorId: string,
   states: Partial<Record<VdpCriterionId, CriterionState>> = {},
-  opts: { found?: boolean; textHash?: string; carriedFrom?: string; observedAt?: string; default?: CriterionState } = {},
+  opts: {
+    found?: boolean
+    textHash?: string
+    carriedFrom?: string
+    observedAt?: string
+    default?: CriterionState
+    retrieval?: VdpObservation['policy']['retrieval']
+    wordCount?: number
+  } = {},
 ): VdpObservation {
   const o: VdpObservation = {
     vendorId,
@@ -188,7 +196,8 @@ export function makeVdp(
       snapshotId: `SN-vdp-${vendorId}`,
       textHash: opts.textHash ?? `text-${vendorId}`,
       host: `${vendorId}.example`,
-      wordCount: 600,
+      wordCount: opts.wordCount ?? 600,
+      retrieval: opts.retrieval ?? ((opts.found ?? true) ? 'READ' : 'NOT_FOUND'),
     },
     criteria: ALL_CRITERIA.map((c) => {
       const state = states[c] ?? opts.default ?? 'MET'

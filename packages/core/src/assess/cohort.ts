@@ -5,8 +5,10 @@
  *    large vendor publishes more records, which says nothing about quality.
  *  - Peer medians use only vendors with a non-null value; the peer count is
  *    always reported. The vendor itself is included in its peer group.
- *  - ALL_SIGNATORIES is every vendor in the run's registry; category groups
- *    use Vendor.category.
+ *  - Peer groups contain only vendors whose signatoryStatus is LISTED:
+ *    ALL_SIGNATORIES is every listed vendor, category groups are listed
+ *    vendors of that Vendor.category. A vendor that is not listed is still
+ *    placed against listed peers but never shapes their medians.
  *  - Position is stated only with at least MIN_PEERS_FOR_POSITION values.
  *  - Wording describes position on an observable metric, never a judgement.
  */
@@ -29,7 +31,13 @@ export function peerGroupsOf(v: Vendor): string[] {
 }
 
 function members(rows: CohortRow[], group: string): CohortRow[] {
-  return group === ALL_SIGNATORIES ? rows : rows.filter((r) => r.vendor.category === group)
+  const listed = rows.filter((r) => r.vendor.signatoryStatus === 'LISTED')
+  return group === ALL_SIGNATORIES ? listed : listed.filter((r) => r.vendor.category === group)
+}
+
+/** Rows that form the signatory cohort (signatoryStatus LISTED). */
+export function signatoryRows(rows: CohortRow[]): CohortRow[] {
+  return members(rows, ALL_SIGNATORIES)
 }
 
 function values(rows: CohortRow[], metricId: string): number[] {
@@ -47,7 +55,7 @@ const COVERAGE_BUCKETS: [string, number, number][] = [
 ]
 
 export function cohortSummaries(rows: CohortRow[]): CohortSummary[] {
-  const groups = [ALL_SIGNATORIES, ...[...new Set(rows.map((r) => r.vendor.category))].sort()]
+  const groups = [ALL_SIGNATORIES, ...[...new Set(signatoryRows(rows).map((r) => r.vendor.category))].sort()]
   return groups.map((group) => {
     const m = members(rows, group)
     const medians: Record<string, number | null> = {}

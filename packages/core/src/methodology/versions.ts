@@ -27,6 +27,8 @@ const BASE: MethodologyParameters = {
   unusualBelowPercentile: 10,
   latencyOutlierFactor: 2,
   latencyOutlierMinDays: 7,
+  vdpMinimumPolicyWords: 80,
+  minimumHighImpactAdvisories: 5,
 }
 
 export const METHODOLOGY_VERSIONS: MethodologyVersion[] = [

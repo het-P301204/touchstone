@@ -28,7 +28,7 @@ describe('executeRun end to end', () => {
 
   it('measures the complete vendor', () => {
     expect(metric(out, 'northwind', 'cve.complete_records')).toMatchObject({ value: 100, numerator: 10, denominator: 10 })
-    expect(metric(out, 'northwind', 'cve.timely_issuance')).toMatchObject({ value: 100, denominator: 2 })
+    expect(metric(out, 'northwind', 'cve.timely_issuance')).toMatchObject({ value: 100, denominator: 5 })
     expect(goal(out, 'northwind', 'G6').status).toBe('VERIFIED')
     expect(goal(out, 'northwind', 'G5').status).toBe('VERIFIED')
     expect(goal(out, 'northwind', 'G1')).toMatchObject({ status: 'NOT_EXTERNALLY_VERIFIABLE', claimCount: 1 })

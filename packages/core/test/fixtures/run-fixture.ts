@@ -2,7 +2,7 @@
  * A small, hand-built cohort for end-to-end run tests (executeRun runs the
  * real identity module over it). Fictional vendors, .example URLs.
  *
- *   northwind    complete records (10/10), all VDP criteria MET, timely advisories
+ *   northwind    complete records (10/10), all VDP criteria MET, 5 timely advisories (the minimum)
  *   halcyon      placeholder-CWE user: 6 records (2 real, 2 placeholder, 1 none, 1 malformed)
  *   brightwater  no CSAF feed (timeliness NOT_VERIFIED); VDP without safe harbor
  *   sparrow      below minimum sample (2 records); no VDP observation
@@ -51,6 +51,9 @@ export function cohortInputs(methodologyVersion = '1.1.0'): RunInputs {
   const advisories = [
     makeAdvisory('northwind', 'NW-2026-01', { cveIds: ['DEMO-2026-0100'], publishedDaysAgo: 40 }),
     makeAdvisory('northwind', 'NW-2026-02', { cveIds: ['DEMO-2026-0101'], publishedDaysAgo: 50 }),
+    makeAdvisory('northwind', 'NW-2026-03', { cveIds: ['DEMO-2026-0102'], publishedDaysAgo: 60 }),
+    makeAdvisory('northwind', 'NW-2026-04', { cveIds: ['DEMO-2026-0103'], publishedDaysAgo: 70 }),
+    makeAdvisory('northwind', 'NW-2026-05', { cveIds: ['DEMO-2026-0104'], publishedDaysAgo: 80 }),
     makeAdvisory('halcyon', 'HC-2026-01', { cveIds: ['DEMO-2026-1001'], publishedDaysAgo: 45 }),
     makeAdvisory('quill', 'QL-2026-01', { cveIds: ['DEMO-2026-0500'], publishedDaysAgo: 35 }),
   ]

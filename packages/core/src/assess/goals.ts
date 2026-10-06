@@ -10,7 +10,7 @@
 import type { DimensionFigure, GoalAssessment, GoalStatus, MetricValue, VdpObservation, Vendor } from '../model/index.ts'
 import { GOALS } from '../methodology/goals.ts'
 import { METRIC_DEFINITIONS, PLEDGE_VDP_CRITERIA, VDP_CRITERION_LABELS } from '../measure/definitions.ts'
-import { criteriaStates, vdpRetrievalFailed } from '../measure/vdp.ts'
+import { criteriaStates, vdpRetrievalFailed, vdpTooShort } from '../measure/vdp.ts'
 import { fmt } from '../measure/stats.ts'
 
 export type GoalInputs = {
@@ -20,6 +20,10 @@ export type GoalInputs = {
   cveSourceFailed: boolean
   minimumEligibleRecords: number
   minimumRecordsPerTrendPeriod: number
+  /** High-impact advisories needed before timeliness can make Goal 6 VERIFIED (default 5). */
+  minimumHighImpactAdvisories?: number
+  /** Plausibility floor for a policy text, in words (for the TOO_SHORT reason). */
+  vdpMinimumPolicyWords?: number
 }
 
 const metricsForGoal = (goalId: string): string[] => METRIC_DEFINITIONS.filter((m) => m.goalId === goalId).map((m) => m.id)
@@ -40,11 +44,13 @@ const label = (c: string): string => VDP_CRITERION_LABELS[c as keyof typeof VDP_
 export function assessG5(inp: GoalInputs): { status: GoalStatus; reason: string } {
   const obs = inp.vdp
   if (!obs) return { status: 'NOT_VERIFIED', reason: 'No vulnerability disclosure policy observation exists for this vendor in the dataset; no policy evidence was found.' }
-  if (vdpRetrievalFailed(obs))
+  if (vdpRetrievalFailed(obs)) {
+    const r = (obs.policy as { retrieval?: string }).retrieval
     return {
       status: 'DATA_ERROR',
-      reason: 'The policy could not be retrieved and no earlier snapshot exists, so none of the four pledge elements could be determined.',
+      reason: `${r === 'UNREADABLE' ? 'The policy page was fetched but its text could not be read (script shell, interstitial or empty page)' : 'The policy could not be retrieved'} and no earlier snapshot was carried forward, so the pledge elements could not be determined. This is a retrieval problem, not a finding about the policy's content.`,
     }
+  }
   const states = criteriaStates(obs)
   const st = (c: string) => states.get(c as never)!.state
   const met = PLEDGE_VDP_CRITERIA.filter((c) => st(c) === 'MET')
@@ -59,8 +65,14 @@ export function assessG5(inp: GoalInputs): { status: GoalStatus; reason: string 
   ]
     .filter(Boolean)
     .join(' ')
-  if (met.length === 4 && contradicted.length === 0)
+  if (met.length === 4 && contradicted.length === 0) {
+    if (vdpTooShort(obs))
+      return {
+        status: 'PARTIAL',
+        reason: `The four pledge elements were found, but the policy text read has ${obs.policy.wordCount ?? '?'} words, below the methodology plausibility floor of ${inp.vdpMinimumPolicyWords ?? 80} words, so the status is capped at PARTIAL (low confidence).${carried}`,
+      }
     return { status: 'VERIFIED', reason: `Evidence supports all four pledge elements; each is quoted from the published policy.${carried}` }
+  }
   if (obs.policy.found && met.length >= 1)
     return { status: 'PARTIAL', reason: `Evidence supports ${met.length} of 4 pledge elements (${met.map(label).join(', ')}). ${detail}${carried}`.trim() }
   if (!obs.policy.found)
@@ -86,15 +98,36 @@ export function assessG6(inp: GoalInputs): { status: GoalStatus; reason: string 
     t === null
       ? `Issuance timeliness not measured: ${timely ? timely.calculation.replace(/ Not measured\.$/, '') : 'no data.'}`
       : `${timely!.numerator} of ${timely!.denominator} high-impact advisories (${fmt(t)}%) have every listed CVE published within the methodology tolerance.`
-  if (q === 100 && t === 100) return { status: 'VERIFIED', reason: `Evidence supports both parts: ${qText} ${tText}` }
+  const minAdv = inp.minimumHighImpactAdvisories ?? 5
+  const fewAdvisories = t !== null && (timely?.denominator ?? 0) < minAdv
+  if (q === 100 && t === 100 && !fewAdvisories) return { status: 'VERIFIED', reason: `Evidence supports both parts: ${qText} ${tText}` }
+  const sampleNote = fewAdvisories ? ` Timeliness rests on fewer than ${minAdv} high-impact advisories (the methodology minimum), so it cannot make the goal VERIFIED.` : ''
   if (q === null && t === null) {
-    const few = complete?.gap === 'BELOW_MINIMUM_SAMPLE' || complete?.gap === 'NO_ELIGIBLE_RECORDS'
-    return {
-      status: 'NOT_VERIFIED',
-      reason: `Evidence incomplete: ${few ? `fewer eligible records than the minimum sample of ${inp.minimumEligibleRecords}` : 'record quality not measurable'} and no high-impact advisories to measure timeliness. ${qText} ${tText}`,
-    }
+    // Neither part measured: sample reasons -> NOT_VERIFIED; anything else is a source or mapping problem -> DATA_ERROR.
+    const qGap = complete?.gap
+    const tGap = timely?.gap
+    const qSample = qGap === 'BELOW_MINIMUM_SAMPLE' || qGap === 'NO_ELIGIBLE_RECORDS'
+    const tNoAdvisories = tGap === 'NO_SOURCE' || tGap === 'NO_ELIGIBLE_RECORDS' || tGap === 'BELOW_MINIMUM_SAMPLE'
+    const qWhy =
+      qGap === 'BELOW_MINIMUM_SAMPLE'
+        ? `${complete?.denominator ?? 0} eligible records, fewer than the minimum sample of ${inp.minimumEligibleRecords}`
+        : qGap === 'NO_ELIGIBLE_RECORDS'
+          ? 'no eligible CVE records in the window'
+          : qGap === 'NOT_APPLICABLE'
+            ? 'record completeness cannot be checked because the vendor registry lists no CPE vendor namespace'
+            : `record quality not measurable (${qGap ?? 'no data'})`
+    const tWhy =
+      tGap === 'NO_SOURCE'
+        ? 'no machine-readable advisory source to measure timeliness'
+        : tGap === 'NO_ELIGIBLE_RECORDS'
+          ? 'no high-impact advisories in the window to measure timeliness'
+          : `timeliness not measurable (${tGap ?? 'no data'})`
+    if (qSample && tNoAdvisories) return { status: 'NOT_VERIFIED', reason: `Evidence incomplete: ${qWhy}, and ${tWhy}.` }
+    return { status: 'DATA_ERROR', reason: `A source or mapping problem prevents measurement: ${qWhy}; ${tWhy}.` }
   }
-  return { status: 'PARTIAL', reason: `Evidence supports part of the goal. ${qText} ${tText}` }
+  const anySupport = (q ?? 0) > 0 || (t ?? 0) > 0
+  const lead = anySupport ? 'Evidence supports part of the goal.' : 'Evidence does not support the goal on the parts that could be measured.'
+  return { status: 'PARTIAL', reason: `${lead} ${qText} ${tText}${sampleNote}` }
 }
 
 export function assessG3(inp: GoalInputs): { status: GoalStatus; reason: string } {
@@ -148,14 +181,15 @@ export function assessGoals(inp: GoalInputs): GoalAssessment[] {
 }
 
 /** The three dimension figures. Each stands alone; they are never combined. */
-export function dimensionFigures(goals: GoalAssessment[], metrics: Map<string, MetricValue>): DimensionFigure[] {
+export function dimensionFigures(goals: GoalAssessment[], metrics: Map<string, MetricValue>, opts: { minimumHighImpactAdvisories?: number } = {}): DimensionFigure[] {
   const g = (id: string) => goals.find((x) => x.goalId === id)!.status
-  const fig = (dimension: DimensionFigure['dimension'], metricId: string, goalStatus: GoalStatus): DimensionFigure => {
-    const v = metrics.get(metricId)?.value ?? null
+  const fig = (dimension: DimensionFigure['dimension'], metricId: string, goalStatus: GoalStatus, minDenominator = 0): DimensionFigure => {
+    const m = metrics.get(metricId)
+    const v = m?.value ?? null
     let status: GoalStatus
     if (goalStatus === 'DATA_ERROR') status = 'DATA_ERROR'
     else if (v === null) status = 'NOT_VERIFIED'
-    else if (v === 100) status = 'VERIFIED'
+    else if (v === 100 && (m?.denominator ?? 0) >= minDenominator) status = 'VERIFIED'
     else status = 'PARTIAL'
     return { dimension, value: v, metricId, status }
   }
@@ -163,6 +197,7 @@ export function dimensionFigures(goals: GoalAssessment[], metrics: Map<string, M
     // The VDP figure's status is the Goal 5 status (it depends on the pledge elements, not only the share).
     { ...fig('VDP', 'vdp.criteria_met', g('G5')), status: g('G5') },
     fig('CVE_QUALITY', 'cve.complete_records', g('G6')),
-    fig('CVE_TIMELINESS', 'cve.timely_issuance', g('G6')),
+    // Below minimumHighImpactAdvisories the figure is shown but capped at PARTIAL.
+    fig('CVE_TIMELINESS', 'cve.timely_issuance', g('G6'), opts.minimumHighImpactAdvisories ?? 5),
   ]
 }

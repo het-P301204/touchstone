@@ -30,7 +30,7 @@ describe('VDP figures', () => {
   })
 
   it('every criterion UNKNOWN: not measured (SOURCE_FAILED), never 0', () => {
-    const { metrics } = measureVdp(makeCtx({ vendor, vdp: makeVdp('halcyon', {}, { default: 'UNKNOWN', found: false }) }))
+    const { metrics } = measureVdp(makeCtx({ vendor, vdp: makeVdp('halcyon', {}, { default: 'UNKNOWN', found: true, retrieval: 'FETCH_FAILED' }) }))
     expect(get(metrics, 'vdp.criteria_met')).toMatchObject({ value: null, gap: 'SOURCE_FAILED' })
     expect(get(metrics, 'vdp.pledge_elements_met')).toMatchObject({ value: null, gap: 'SOURCE_FAILED' })
   })

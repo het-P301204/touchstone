@@ -30,7 +30,7 @@ import { fmt, percentileNearestRank, round2 } from '../measure/stats.ts'
 import { sha256Text } from '../util/sha256.ts'
 import { canonicalJson } from '../run/canonical.ts'
 import type { CohortRow } from './cohort.ts'
-import { historicalMedian } from './cohort.ts'
+import { historicalMedian, signatoryRows } from './cohort.ts'
 
 function withId(a: Omit<Anomaly, 'id'>): Anomaly {
   return { id: `AN-${sha256Text(canonicalJson(a)).slice(0, 10)}`, ...a }
@@ -50,6 +50,8 @@ export type AnomalyInputs = {
   vdpChanges: VdpChange[]
   /** Freshness of sources the vendor's evidence was read from. */
   vendorSourceFreshness: SourceFreshness[]
+  /** Number of VDP observations supplied for the vendor (more than one is a data quality note). */
+  vdpObservationCount?: number
 }
 
 export function detectAnomalies(inp: AnomalyInputs): Anomaly[] {
@@ -63,7 +65,7 @@ export function detectAnomalies(inp: AnomalyInputs): Anomaly[] {
     if (def.direction !== 'HIGHER_IS_STRONGER_EVIDENCE') continue
     const m = inp.metrics.get(metricId)
     if (!m || m.value === null) continue
-    const vals = inp.rows.flatMap((r) => {
+    const vals = signatoryRows(inp.rows).flatMap((r) => {
       const v = r.metrics.get(metricId)?.value
       return v === null || v === undefined ? [] : [v]
     })
@@ -132,6 +134,19 @@ export function detectAnomalies(inp: AnomalyInputs): Anomaly[] {
         headline: `Data quality: identity conflict on ${c.aliasKind} "${c.value}" shared with ${c.vendorIds.filter((v) => v !== vendorId).join(', ')}.`,
         detail: `${c.note} ${new Set([...c.affectedRecordIds, ...inp.exclusions.filter((x) => x.reason === 'IDENTITY_CONFLICT').map((x) => x.cveId)]).size} record(s) naming this vendor are excluded until the registry resolves it.`,
         rule: `Identity conflict ${c.kind} (${c.id}).`,
+        evidenceIds: [],
+      }),
+    )
+  }
+  if ((inp.vdpObservationCount ?? 0) > 1) {
+    out.push(
+      withId({
+        vendorId,
+        kind: 'DATA_QUALITY',
+        metricId: 'vdp.criteria_met',
+        headline: `Data quality: ${inp.vdpObservationCount} VDP observations were supplied for this vendor; one was used.`,
+        detail: `The observation with the latest observedAt (then the lowest snapshot id) is used${inp.vdp ? `: observed ${inp.vdp.observedAt}` : ''}. The others are set aside.`,
+        rule: 'One VDP observation per vendor; deterministic choice by observedAt, then snapshot id.',
         evidenceIds: [],
       }),
     )

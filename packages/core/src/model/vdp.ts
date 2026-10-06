@@ -74,6 +74,17 @@ export type VdpObservation = {
     host?: string
     /** Count of words extracted, for plausibility (a 12-word "policy" is suspicious). */
     wordCount?: number
+    /**
+     * Whether the policy text could actually be read. Retrieval problems are
+     * never content findings: FETCH_FAILED and UNREADABLE make every text
+     * criterion UNKNOWN and the goal DATA_ERROR (or carried), never NOT_MET.
+     *   READ          text extracted and at or above the plausibility floor
+     *   TOO_SHORT     text extracted but below vdpMinimumPolicyWords: assessed, G5 capped at PARTIAL
+     *   UNREADABLE    fetched, but the page is a script shell / interstitial / empty
+     *   FETCH_FAILED  the fetch failed
+     *   NOT_FOUND     no policy document exists to read
+     */
+    retrieval: 'READ' | 'TOO_SHORT' | 'UNREADABLE' | 'FETCH_FAILED' | 'NOT_FOUND'
   }
   criteria: CriterionResult[]
   prohibitive: ProhibitiveFinding[]

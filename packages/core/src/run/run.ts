@@ -12,11 +12,14 @@ import type {
   Attribution,
   AttributionExclusion,
   CveRecord,
+  MethodologyVersion,
   MetricValue,
   RunInputs,
   RunManifest,
   RunOutput,
   SourceFreshness,
+  VdpObservation,
+  Vendor,
   VendorResult,
 } from '../model/index.ts'
 import { detectIdentityConflicts, attributeCves } from '../identity/index.ts'
@@ -28,7 +31,7 @@ import { computeFreshness } from '../freshness/freshness.ts'
 import { METRIC_DEFINITIONS } from '../measure/definitions.ts'
 import type { AttributedRecord, MeasureContext } from '../measure/context.ts'
 import { measureCveQuality } from '../measure/cve-quality.ts'
-import { measureTimeliness } from '../measure/timeliness.ts'
+import { dedupeAdvisories, measureTimeliness } from '../measure/timeliness.ts'
 import { measureVdp } from '../measure/vdp.ts'
 import { measureClassShare } from '../measure/class-share.ts'
 import { toMs } from '../measure/stats.ts'
@@ -48,9 +51,60 @@ const byStr = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0)
 
 export const STAGES = ['FETCH', 'SNAPSHOT', 'NORMALIZE', 'IDENTITY', 'VALIDATE', 'MEASURE', 'SCORE', 'EVIDENCE', 'PUBLISH'] as const
 
-/** sha256 over the canonical JSON of the full inputs. */
-export function computeInputsHash(inputs: RunInputs): string {
-  return sha256Text(canonicalJson(inputs))
+/**
+ * Fingerprint of a methodology version's full definition: version, every
+ * parameter, parser and scoring versions. A parameter edited in place without
+ * a version bump changes the fingerprint, hence inputsHash and runId.
+ */
+export function methodologyFingerprint(m: Pick<MethodologyVersion, 'version' | 'parameters' | 'parserVersion' | 'scoringVersion'>): string {
+  return sha256Text(canonicalJson({ version: m.version, parameters: m.parameters, parserVersion: m.parserVersion, scoringVersion: m.scoringVersion })).slice(0, 16)
+}
+
+const sortCanon = <T>(xs: T[]): T[] =>
+  xs
+    .map((x) => ({ x, c: canonicalJson(x) }))
+    .sort((a, b) => byStr(a.c, b.c))
+    .map((e) => e.x)
+
+/**
+ * A vendor with its set-valued fields (aliases, alias evidence, claims,
+ * domains) in canonical order, so the registry's listing order never reaches
+ * a hash or an output.
+ */
+export function canonicalVendor(v: Vendor): Vendor {
+  return {
+    ...v,
+    aliases: sortCanon(v.aliases.map((a) => ({ ...a, evidence: sortCanon(a.evidence) }))),
+    claims: sortCanon(v.claims),
+    domains: [...v.domains].sort(),
+  }
+}
+
+/**
+ * sha256 over a canonical projection of the inputs: every top-level array is
+ * sorted by the canonical JSON of its elements (vendors canonicalized first),
+ * so array order never changes the hash; the methodology fingerprint is
+ * included so parameters are covered, not only the version string.
+ */
+export function computeInputsHash(inputs: RunInputs, methodology: MethodologyVersion = methodologyVersion(inputs.methodologyVersion)): string {
+  const projection: Record<string, unknown> = { methodologyFingerprint: methodologyFingerprint(methodology) }
+  for (const [k, v] of Object.entries(inputs)) {
+    if (k === 'vendors') projection[k] = sortCanon((v as Vendor[]).map(canonicalVendor)).map((x) => canonicalJson(x)).sort()
+    else projection[k] = Array.isArray(v) ? v.map((x) => canonicalJson(x)).sort() : v
+  }
+  return sha256Text(canonicalJson(projection))
+}
+
+/** One VDP observation per vendor: the latest observedAt, then the lowest snapshot id, then canonical order. */
+export function pickVdpObservation(list: VdpObservation[], vendorId: string): { chosen?: VdpObservation; count: number } {
+  const mine = list.filter((o) => o.vendorId === vendorId)
+  const snap = (o: VdpObservation) => o.policy.snapshotId ?? o.securityTxt.snapshotId ?? o.carriedFromSnapshotId ?? ''
+  const sorted = mine
+    .map((o) => ({ o, ms: toMs(o.observedAt) ?? Number.NEGATIVE_INFINITY, s: snap(o), c: canonicalJson(o) }))
+    .sort((a, b) => b.ms - a.ms || byStr(a.s, b.s) || byStr(a.c, b.c))
+  const res: { chosen?: VdpObservation; count: number } = { count: mine.length }
+  if (sorted[0]) res.chosen = sorted[0].o
+  return res
 }
 
 /** "TS-YYYY-MM-DD-XXXX": date of asOf + first 4 hex (upper case) of the inputs hash. */
@@ -65,6 +119,7 @@ export function computeOutputsHash(out: Omit<RunOutput, 'manifest'> & { manifest
       methodologyVersion: methodology.version,
       parserVersion: methodology.parserVersion,
       scoringVersion: methodology.scoringVersion,
+      ...('parameters' in methodology ? { methodologyFingerprint: methodologyFingerprint(methodology as MethodologyVersion) } : {}),
       vendors: out.vendors,
       evidence: out.evidence,
       attributions: out.attributions,
@@ -85,12 +140,13 @@ export function executeRun(inputs: RunInputs): RunOutput {
   const asOfMs = toMs(inputs.asOf)
   if (asOfMs === null) throw new Error(`asOf is not a valid ISO date: ${inputs.asOf}`)
 
-  const inputsHash = computeInputsHash(inputs)
+  const inputsHash = computeInputsHash(inputs, methodology)
   const runId = runIdFor(inputs.asOf, inputsHash)
 
-  const vendors = [...inputs.vendors].sort((a, b) => byStr(a.id, b.id))
-  const cves = [...inputs.cves].sort((a, b) => byStr(a.id, b.id) || byStr(a.sourceHash, b.sourceHash))
-  const advisories = [...inputs.advisories].sort((a, b) => byStr(a.vendorId, b.vendorId) || byStr(a.id, b.id))
+  const vendors = inputs.vendors.map(canonicalVendor).sort((a, b) => byStr(a.id, b.id))
+  const cves = sortCanon(inputs.cves).sort((a, b) => byStr(a.id, b.id) || byStr(a.sourceHash, b.sourceHash))
+  const dedupedAdvisories = dedupeAdvisories(inputs.advisories)
+  const advisories = dedupedAdvisories.advisories
   const sources = [...inputs.sources].sort((a, b) => byStr(a.id, b.id))
   const snapshots = [...inputs.snapshots].sort((a, b) => byStr(a.id, b.id))
 
@@ -125,6 +181,7 @@ export function executeRun(inputs: RunInputs): RunOutput {
   const ledger = new EvidenceLedger()
   const excludedIds = new Set(exclusions.map((x) => x.cveId))
 
+  const vdpObservationCounts = new Map<string, number>()
   type Measured = { metrics: Map<string, MetricValue>; attributed: AttributedRecord[]; ctx: MeasureContext }
   const measured = new Map<string, Measured>()
 
@@ -156,8 +213,9 @@ export function executeRun(inputs: RunInputs): RunOutput {
       cveSourceFailed,
       ledger,
     }
-    const vdp = inputs.vdp.find((o) => o.vendorId === vendor.id)
-    if (vdp) ctx.vdp = vdp
+    const pick = pickVdpObservation(inputs.vdp, vendor.id)
+    if (pick.chosen) ctx.vdp = pick.chosen
+    vdpObservationCounts.set(vendor.id, pick.count)
     const metrics = new Map<string, MetricValue>()
     for (const m of measureVdp(ctx).metrics) metrics.set(m.metricId, m)
     for (const m of measureCveQuality(ctx).metrics) metrics.set(m.metricId, m)
@@ -181,6 +239,8 @@ export function executeRun(inputs: RunInputs): RunOutput {
       cveSourceFailed,
       minimumEligibleRecords: params.minimumEligibleRecords,
       minimumRecordsPerTrendPeriod: params.minimumRecordsPerTrendPeriod,
+      minimumHighImpactAdvisories: params.minimumHighImpactAdvisories,
+      vdpMinimumPolicyWords: params.vdpMinimumPolicyWords,
     })
     const coverage = computeCoverage(m.metrics, m.ctx.vdp, evidenceByVendor.get(vendor.id) ?? [])
     return { vendor, metrics: m.metrics, coverage, g5Status: goals.find((g) => g.goalId === 'G5')!.status, goals }
@@ -190,9 +250,16 @@ export function executeRun(inputs: RunInputs): RunOutput {
   const vendorResults: VendorResult[] = rows.map((row) => {
     const m = measured.get(row.vendor.id)!
     const benchmarks = benchmarksFor(row, rows, inputs.history, inputs.asOf, methodology.version)
-    const prev = inputs.previousVdp.find((o) => o.vendorId === row.vendor.id)
+    const prev = pickVdpObservation(inputs.previousVdp, row.vendor.id).chosen
     const vdpChanges = detectVdpChange(prev, m.ctx.vdp)
+    // Every source the vendor's evidence relies on: evidence sources, plus the
+    // VDP policy, security.txt and carried snapshots, plus advisory snapshots.
     const vendorSourceIds = new Set((evidenceByVendor.get(row.vendor.id) ?? []).map((e) => e.sourceId))
+    const vdpObs = m.ctx.vdp
+    for (const sid of [vdpObs?.policy.snapshotId, vdpObs?.securityTxt.snapshotId, vdpObs?.carriedFromSnapshotId, ...m.ctx.advisories.map((a) => a.snapshotId)]) {
+      const s = sid ? snapshotsById.get(sid) : undefined
+      if (s) vendorSourceIds.add(s.sourceId)
+    }
     const vendorSourceFreshness: SourceFreshness[] = freshness.filter(
       (f) => vendorSourceIds.has(f.sourceId) && (f.family === 'VENDOR_VDP' || f.family === 'SECURITY_TXT' || f.family === 'VENDOR_ADVISORY'),
     )
@@ -209,11 +276,12 @@ export function executeRun(inputs: RunInputs): RunOutput {
       ...(m.ctx.vdp ? { vdp: m.ctx.vdp } : {}),
       vdpChanges,
       vendorSourceFreshness,
+      vdpObservationCount: vdpObservationCounts.get(row.vendor.id) ?? 0,
     })
     const result: VendorResult = {
       vendor: row.vendor,
       goals: row.goals,
-      dimensions: dimensionFigures(row.goals, row.metrics),
+      dimensions: dimensionFigures(row.goals, row.metrics, { minimumHighImpactAdvisories: params.minimumHighImpactAdvisories }),
       coverage: row.coverage,
       benchmarks,
       anomalies,
@@ -269,7 +337,7 @@ export function executeRun(inputs: RunInputs): RunOutput {
     {
       stage: 'NORMALIZE',
       status: badIds.length ? 'WARN' : 'OK',
-      detail: `${cves.length} CVE record(s), ${advisories.length} advisory(ies), ${inputs.vdp.length} VDP observation(s).${badIds.length ? ` ${badIds.length} id(s) outside the accepted patterns.` : ''}`,
+      detail: `${cves.length} CVE record(s), ${advisories.length} advisory(ies)${dedupedAdvisories.duplicates ? ` (${dedupedAdvisories.duplicates} duplicate advisory listing(s) collapsed)` : ''}, ${inputs.vdp.length} VDP observation(s).${badIds.length ? ` ${badIds.length} id(s) outside the accepted patterns.` : ''}`,
     },
     {
       stage: 'IDENTITY',
