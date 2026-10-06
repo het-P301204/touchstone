@@ -81,9 +81,17 @@ export type CnaFieldStatus = 'COMPLETE' | 'MISSING_CWE' | 'MISSING_CPE' | 'MISSI
 export type CveRow = {
   id: string
   state: CveRecord['state']
+  /**
+   * The vendor(s) the engine attributed this record to. Ownership comes only
+   * from the run's published attributions; the API never derives it (not from
+   * the assigner, the affected-vendor strings or the CPEs).
+   */
   vendorIds: string[]
   attribution: { vendorId: string; rule: Attribution['rule']; confidence: Attribution['confidence'] }[]
-  assigner: string
+  /** Why the engine left the record unattributed, when it did (e.g. AMBIGUOUS_VENDOR with its candidates). */
+  exclusions: { reason: AttributionExclusion['reason']; candidateVendorIds: string[] }[]
+  /** The CNA that issued the record (cveMetadata.assignerShortName). Not an owner: see vendorIds. */
+  assignerCna: string
   title: string | null
   datePublished: string | null
   year: number | null
@@ -318,6 +326,7 @@ export class Bundle {
       }
     }
     for (const { record: r, attributions } of index.byId.values()) {
+      const excl = index.exclusions.filter((x) => x.cveId === r.id)
       const sev = rowSeverity(r)
       const f = cnaFieldStatus(r, placeholderCounts)
       index.rows.push({
@@ -325,7 +334,8 @@ export class Bundle {
         state: r.state,
         vendorIds: [...new Set(attributions.map((a) => a.vendorId))].sort(),
         attribution: attributions.map((a) => ({ vendorId: a.vendorId, rule: a.rule, confidence: a.confidence })),
-        assigner: r.assigner.shortName,
+        exclusions: excl.map((x) => ({ reason: x.reason, candidateVendorIds: [...x.candidateVendorIds] })),
+        assignerCna: r.assigner.shortName,
         title: r.title ?? null,
         datePublished: r.datePublished ?? null,
         year: yearOf(r),

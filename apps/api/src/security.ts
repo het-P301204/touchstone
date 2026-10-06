@@ -206,19 +206,41 @@ export function adminAuth(config: Config): MiddlewareHandler<Env> {
   }
 }
 
-/** Fixed-window in-memory rate limit per client address (per API instance). */
-export function rateLimit(bucket: string, limit: number, windowMs: number, trustProxy: boolean, now: () => number = Date.now): MiddlewareHandler<Env> {
+/** Most client keys a single limiter tracks; beyond this the oldest entry is evicted. */
+export const RATE_LIMIT_MAX_KEYS = 10_000
+
+/**
+ * Fixed-window in-memory rate limit per client (per API instance).
+ *
+ * Clients are keyed by `rateLimitKey`: an IPv4 address as is, an IPv6 address
+ * by its /64 (one host normally controls a whole /64, so rotating through it
+ * must not buy fresh buckets). The map of keys is capped: expired windows are
+ * swept first, then the oldest key is evicted, so an address flood cannot
+ * grow memory without bound.
+ */
+export function rateLimit(
+  bucket: string,
+  limit: number,
+  windowMs: number,
+  trustProxy: boolean,
+  now: () => number = Date.now,
+  maxKeys: number = RATE_LIMIT_MAX_KEYS,
+): MiddlewareHandler<Env> {
   const hits = new Map<string, { count: number; reset: number }>()
   let nextSweep = now() + windowMs
+  const sweep = (t: number) => {
+    for (const [k, v] of hits) if (v.reset <= t) hits.delete(k)
+    nextSweep = t + windowMs
+  }
   return async (c, next) => {
     const t = now()
-    if (t >= nextSweep) {
-      for (const [k, v] of hits) if (v.reset <= t) hits.delete(k)
-      nextSweep = t + windowMs
-    }
-    const key = clientAddress(c, trustProxy)
+    if (t >= nextSweep) sweep(t)
+    const key = rateLimitKey(clientAddress(c, trustProxy))
     let h = hits.get(key)
     if (!h || h.reset <= t) {
+      hits.delete(key)
+      if (hits.size >= maxKeys) sweep(t)
+      while (hits.size >= maxKeys) hits.delete(hits.keys().next().value!)
       h = { count: 0, reset: t + windowMs }
       hits.set(key, h)
     }
@@ -235,7 +257,48 @@ export function rateLimit(bucket: string, limit: number, windowMs: number, trust
 }
 
 /**
- * Client address for rate limiting: the socket's remote address. Only when
+ * A server-wide ceiling per window, independent of client address: the
+ * backstop for an actor spread across many addresses or prefixes. `check()`
+ * runs before the work, `consume()` after it is accepted, so requests that
+ * fail validation do not use up the ceiling for everyone else.
+ */
+export class GlobalCeiling {
+  readonly bucket: string
+  readonly limit: number
+  readonly windowMs: number
+  private readonly now: () => number
+  private count = 0
+  private reset = 0
+  constructor(bucket: string, limit: number, windowMs: number, now: () => number = Date.now) {
+    this.bucket = bucket
+    this.limit = limit
+    this.windowMs = windowMs
+    this.now = now
+  }
+  private roll(): number {
+    const t = this.now()
+    if (t >= this.reset) {
+      this.count = 0
+      this.reset = t + this.windowMs
+    }
+    return t
+  }
+  /** Throws 429 RATE_LIMITED_GLOBAL when the ceiling is reached. */
+  check(c?: Context<Env>): void {
+    const t = this.roll()
+    if (this.count >= this.limit) {
+      c?.header('Retry-After', String(Math.max(1, Math.ceil((this.reset - t) / 1000))))
+      throw new HttpError(429, 'RATE_LIMITED_GLOBAL', 'This server has reached its hourly limit for this operation. Try again later.', { bucket: this.bucket })
+    }
+  }
+  consume(): void {
+    this.roll()
+    this.count++
+  }
+}
+
+/**
+ * Client address: the socket's remote address. Only when
  * TOUCHSTONE_TRUST_PROXY=true (one trusted reverse proxy in front) is the
  * right-most X-Forwarded-For entry used, the one that proxy appended; entries
  * to its left are client-supplied and forgeable.
@@ -251,5 +314,66 @@ export function clientAddress(c: Context<Env>, trustProxy: boolean): string {
     const picked = chain[chain.length - 1]
     if (picked && picked.length <= 64) addr = picked
   }
-  return addr.replace(/^::ffff:/, '')
+  return addr.replace(/^::ffff:(?=\d+\.\d+\.\d+\.\d+$)/i, '')
+}
+
+const IPV4_RE = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/
+
+/** Expand an IPv6 literal (optionally with an embedded IPv4 tail and/or zone) to 8 groups, or null. */
+export function expandIPv6(input: string): number[] | null {
+  let s = input.trim().toLowerCase()
+  if (s.startsWith('[') && s.endsWith(']')) s = s.slice(1, -1)
+  const zone = s.indexOf('%')
+  if (zone >= 0) s = s.slice(0, zone)
+  if (!s.includes(':')) return null
+  // An embedded IPv4 tail (::ffff:192.0.2.1) becomes two hex groups.
+  const lastColon = s.lastIndexOf(':')
+  const maybeV4 = s.slice(lastColon + 1)
+  if (maybeV4.includes('.')) {
+    const m = IPV4_RE.exec(maybeV4)
+    if (!m) return null
+    const o = m.slice(1, 5).map(Number)
+    if (o.some((x) => x > 255)) return null
+    s = `${s.slice(0, lastColon + 1)}${((o[0]! << 8) | o[1]!).toString(16)}:${((o[2]! << 8) | o[3]!).toString(16)}`
+  }
+  const want = 8
+  const parseGroups = (part: string): number[] | null => {
+    if (part === '') return []
+    const out: number[] = []
+    for (const g of part.split(':')) {
+      if (!/^[0-9a-f]{1,4}$/.test(g)) return null
+      out.push(parseInt(g, 16))
+    }
+    return out
+  }
+  let groups: number[]
+  const dbl = s.indexOf('::')
+  if (dbl >= 0) {
+    if (s.indexOf('::', dbl + 1) >= 0) return null
+    const head = parseGroups(s.slice(0, dbl))
+    const rest = parseGroups(s.slice(dbl + 2))
+    if (!head || !rest || head.length + rest.length > want - 1) return null
+    groups = [...head, ...new Array<number>(want - head.length - rest.length).fill(0), ...rest]
+  } else {
+    const all = parseGroups(s)
+    if (!all || all.length !== want) return null
+    groups = all
+  }
+  return groups
+}
+
+/**
+ * The rate-limit key for a client address: IPv4 as is; IPv4-mapped IPv6 as
+ * its IPv4 address; any other IPv6 address as its /64 prefix. Anything that is
+ * not an IP literal (e.g. "local" in tests) is used as given, bounded in length.
+ */
+export function rateLimitKey(addr: string): string {
+  const a = addr.trim()
+  if (IPV4_RE.test(a)) return a
+  const g = expandIPv6(a)
+  if (!g) return a.slice(0, 64)
+  if (g[0] === 0 && g[1] === 0 && g[2] === 0 && g[3] === 0 && g[4] === 0 && g[5] === 0xffff) {
+    return `${g[6]! >> 8}.${g[6]! & 0xff}.${g[7]! >> 8}.${g[7]! & 0xff}`
+  }
+  return `${g.slice(0, 4).map((x) => x.toString(16)).join(':')}::/64`
 }

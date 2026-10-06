@@ -100,6 +100,43 @@ describe('dispute lifecycle', () => {
     expect(((await broken.json()) as Json).error.code).toBe('INVALID_JSON')
   })
 
+  it('checks every target kind against the run and vendor named in the dispute', async () => {
+    const ev = ((await (await t.app.request(`/api/vendors/${NORTHWIND}/evidence?run=${RUN_2}`)).json()) as Json).evidence[0].id as string
+    const cases: [Json, number][] = [
+      [{ kind: 'GOAL', id: 'G3' }, 201],
+      [{ kind: 'GOAL', id: 'G8' }, 422],
+      [{ kind: 'METRIC', id: 'cve.timely_issuance' }, 201],
+      [{ kind: 'METRIC', id: 'cve.made_up' }, 422],
+      [{ kind: 'EVIDENCE', id: ev }, 201],
+      [{ kind: 'EVIDENCE', id: 'EV-0000000000' }, 422],
+      // Attributed to Northwind by the engine.
+      [{ kind: 'CVE', id: 'demo-2026-0001' }, 201],
+      // Excluded (ambiguous) with Northwind among the candidates.
+      [{ kind: 'CVE', id: 'DEMO-2026-0009' }, 201],
+      // Attributed to Halcyon, not to Northwind.
+      [{ kind: 'CVE', id: 'DEMO-2025-0003' }, 422],
+      [{ kind: 'CVE', id: 'CVE-2024-21412' }, 422],
+      [{ kind: 'IDENTITY', id: 'northwind' }, 201],
+      [{ kind: 'IDENTITY', id: 'Northwind Systems' }, 201],
+      [{ kind: 'IDENTITY', id: 'Halcyon Cloud' }, 422],
+      [{ kind: 'IDENTITY', id: 'IC-unknown' }, 422],
+    ]
+    for (const [target, status] of cases) {
+      const r = await t.json('POST', '/api/disputes', valid({ target }))
+      const body = (await r.json()) as Json
+      expect([target.id, r.status]).toEqual([target.id, status])
+      if (status === 422) {
+        expect(body.error.code).toBe('UNKNOWN_TARGET')
+        expect(body.error.message.length).toBeGreaterThan(10)
+      }
+    }
+    const stored = (await (await t.json('POST', '/api/disputes', valid({ target: { kind: 'CVE', id: 'demo-2026-0002' } }))).json()) as Json
+    expect(stored.target).toEqual({ kind: 'CVE', id: 'DEMO-2026-0002' })
+    // The same CVE is valid for Halcyon only where the engine says so.
+    expect((await t.json('POST', '/api/disputes', valid({ vendorId: HALCYON, target: { kind: 'CVE', id: 'DEMO-2025-0003' } }))).status).toBe(201)
+    expect((await t.json('POST', '/api/disputes', valid({ vendorId: HALCYON, target: { kind: 'CVE', id: 'DEMO-2026-0001' } }))).status).toBe(422)
+  })
+
   it('walks OPEN -> UNDER_REVIEW -> CONFIRMED with an append-only history', async () => {
     const id = ((await (await t.json('POST', '/api/disputes', valid())).json()) as Json).id as string
     const step = (to: string, extra: Json = {}) => t.json('POST', `/api/disputes/${id}/transition`, { to, note: `to ${to}`, ...extra }, t.adminHeaders)

@@ -21,6 +21,12 @@ try {
   throw e
 }
 const log = logger(config.logLevel)
+if (config.anyHostAllowed) {
+  log('warn', {
+    operation: 'config',
+    warning: `TOUCHSTONE_ALLOWED_HOSTS=* accepts any Host header: DNS-rebinding protection is off${config.host ? ` for HOST=${config.host}` : ''}. Use it only behind a proxy that validates Host.`,
+  })
+}
 const store = new Store(config.dbPath)
 const interrupted = store.failInterruptedJobs(new Date().toISOString())
 if (interrupted) log('warn', { operation: 'refresh.recover', interruptedJobs: interrupted })

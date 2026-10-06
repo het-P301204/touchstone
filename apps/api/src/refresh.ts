@@ -20,6 +20,7 @@ import { isAbsolute, join, relative, resolve } from 'node:path'
 import type { RunInputs } from '../../../packages/core/src/model/index.ts'
 import type { Bundle } from './bundle.ts'
 import { BundleError } from './bundle.ts'
+import { REPO_ROOT } from './config.ts'
 import type { Config } from './config.ts'
 import type { Engine, EngineLoader } from './engine.ts'
 import { HttpError } from './security.ts'
@@ -139,6 +140,8 @@ export class RefreshRunner {
       s.status = 'FAILED'
       s.detail = s.detail ? `${s.detail} ${message}` : message
       s.finishedAt = this.now()
+      // The full message (which may name server paths) goes to the log; clients get the scrubbed view (jobView).
+      this.deps.log('warn', { operation: 'refresh.stage', jobId: job.id, stage: name, error: message })
       for (const later of job.stages) if (later.status === 'PENDING') later.status = 'SKIPPED'
       job.status = 'FAILED'
       job.error = `${name} failed: ${message}`
@@ -244,7 +247,7 @@ export class RefreshRunner {
       const failed = result.snapshots.filter((s) => s.status !== 'OK').length
       set(
         `Collected ${result.snapshots.length} snapshot(s) for ${ids.length} vendor(s) from public sources through the SSRF-safe fetcher; ${failed} not OK. ` +
-          `Snapshots stored under ${config.liveOutDir}.`,
+          'Snapshots stored in TOUCHSTONE_LIVE_OUT.',
         failed ? 'WARN' : 'OK',
       )
       return result
@@ -269,7 +272,7 @@ export class RefreshRunner {
       mkdirSync(dir, { recursive: true })
       writeFileSync(join(dir, 'manifest.json'), JSON.stringify(out.manifest, null, 2) + '\n')
       writeFileSync(join(dir, 'inputs.json'), JSON.stringify(inputs) + '\n')
-      set(`Held for review, not published to the served bundle. Manifest and inputs written to ${dir}.`, 'SKIPPED')
+      set(`Held for review, not published to the served bundle. Manifest and inputs written to TOUCHSTONE_LIVE_OUT/runs/${out.manifest.runId}/.`, 'SKIPPED')
       job.result = { runId: out.manifest.runId, outputsHash: out.manifest.outputsHash, inputsHash: out.manifest.inputsHash, published: false, collectionErrors: errors.length }
     })
     job.status = 'DONE'
@@ -288,7 +291,7 @@ export function readFixtureSnapshots(fixturesRoot: string, datasetVersion: strin
   const root = resolve(fixturesRoot)
   const versionDir = join(root, datasetVersion)
   const manifestPath = join(versionDir, 'manifest.json')
-  if (!existsSync(manifestPath)) throw new BundleError(`The demo fixtures for ${datasetVersion} are missing (${manifestPath}).`)
+  if (!existsSync(manifestPath)) throw new BundleError(`The demo fixtures for ${datasetVersion} are missing (no ${datasetVersion}/manifest.json under TOUCHSTONE_DEMO_FIXTURES).`)
   const raw = JSON.parse(readFileSync(manifestPath, 'utf8')) as unknown
   const list = Array.isArray(raw) ? raw : raw && typeof raw === 'object' && Array.isArray((raw as { snapshots?: unknown }).snapshots) ? (raw as { snapshots: unknown[] }).snapshots : null
   if (!list) throw new Error('The snapshot manifest has no snapshot list.')
@@ -314,22 +317,55 @@ export function readFixtureSnapshots(fixturesRoot: string, datasetVersion: strin
   return { files, failed }
 }
 
-/** The shape the web app reads from GET /api/refresh/:jobId. */
-export function jobView(job: RefreshJob): Record<string, unknown> {
+/**
+ * Builds the function that removes server filesystem paths from text shown to
+ * clients. Job status is readable without a token, and stage details can carry
+ * error messages from the filesystem or the engine. Known configured
+ * directories become their variable names; any other absolute path becomes
+ * "<path>". The unscrubbed text stays in the store and the server log.
+ */
+export function pathScrubber(config: Pick<Config, 'demoFixturesDir' | 'liveOutDir' | 'liveRegistry' | 'dataDir' | 'dbPath' | 'webDist'>): (s: string) => string {
+  const named: [string, string][] = [
+    [config.demoFixturesDir, 'TOUCHSTONE_DEMO_FIXTURES'],
+    [config.liveOutDir, 'TOUCHSTONE_LIVE_OUT'],
+    [config.dataDir, 'TOUCHSTONE_DATA_DIR'],
+    [config.webDist, 'TOUCHSTONE_WEB_DIST'],
+    [REPO_ROOT, '.'],
+  ]
+  if (config.liveRegistry) named.push([config.liveRegistry, 'TOUCHSTONE_LIVE_REGISTRY'])
+  if (config.dbPath !== ':memory:') named.push([config.dbPath, 'TOUCHSTONE_DB'])
+  const variants: [string, string][] = []
+  for (const [path, label] of named) {
+    for (const v of new Set([path, path.replace(/\\/g, '/'), path.replace(/\//g, '\\')])) if (v.length > 3) variants.push([v, label])
+  }
+  variants.sort((a, b) => b[0].length - a[0].length)
+  // Windows drive or UNC paths, then POSIX absolute paths not preceded by a word, ':', '/', '.', '~' or '-' (so URLs survive).
+  const windowsPath = /(?:\b[A-Za-z]:[\\/]|\\\\[^\\\s]+\\)[^\s'"`<>|]*/g
+  const posixPath = /(?<![\w:/.~-])\/[^\s/'"`<>|]+(?:\/[^\s'"`<>|]*)*/g
+  return (text: string) => {
+    let out = text
+    for (const [v, label] of variants) out = out.split(v).join(label)
+    return out.replace(windowsPath, '<path>').replace(posixPath, '<path>')
+  }
+}
+
+/** The shape the web app reads from GET /api/refresh/:jobId, with server paths removed. */
+export function jobView(job: RefreshJob, scrub: (s: string) => string = (s) => s): Record<string, unknown> {
   const result = job.result as { runId?: string } | null
+  const cleanResult = job.result ? Object.fromEntries(Object.entries(job.result).map(([k, v]) => [k, typeof v === 'string' ? scrub(v) : v])) : null
   return {
     jobId: job.id,
     mode: job.mode,
     status: job.status,
     datasetVersion: job.datasetVersion,
-    statement: job.statement,
+    statement: scrub(job.statement),
     networkCalls: job.mode === 'DEMO' ? 0 : null,
     requestedAt: job.requestedAt,
     startedAt: job.startedAt,
     finishedAt: job.finishedAt,
-    stages: job.stages,
+    stages: job.stages.map((st) => ({ ...st, detail: scrub(st.detail) })),
     ...(result?.runId ? { runId: result.runId } : {}),
-    result: job.result,
-    ...(job.error ? { error: job.error } : {}),
+    result: cleanResult,
+    ...(job.error ? { error: scrub(job.error) } : {}),
   }
 }

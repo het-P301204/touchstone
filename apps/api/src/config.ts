@@ -37,11 +37,18 @@ export type Config = {
   trustProxy: boolean
   /** Origins that get CORS headers. Empty (the default) means CORS is off. */
   corsOrigins: string[]
-  /** Host header values accepted (DNS-rebinding protection). Empty means any host. */
+  /** Host header values accepted (DNS-rebinding protection). Empty means any host (only with an explicit "*"). */
   allowedHosts: string[]
+  /** True when TOUCHSTONE_ALLOWED_HOSTS=* was set explicitly: the Host check is off (logged as a warning at start). */
+  anyHostAllowed: boolean
   rateLimitPerMinute: number
   disputeRateLimitPerHour: number
   reproduceRateLimitPerHour: number
+  /** Server-wide ceilings, whatever the client address. */
+  disputeGlobalLimitPerHour: number
+  reproduceGlobalLimitPerHour: number
+  /** Reproductions waiting behind the one in flight before new ones get 429. */
+  reproduceQueueLimit: number
   maxBodyBytes: number
   logLevel: LogLevel
   webDist: string
@@ -115,6 +122,9 @@ const EnvSchema = z.object({
   TOUCHSTONE_RATE_LIMIT_PER_MINUTE: intVar(1, 100_000, 300),
   TOUCHSTONE_DISPUTE_RATE_LIMIT_PER_HOUR: intVar(1, 10_000, 10),
   TOUCHSTONE_REPRODUCE_RATE_LIMIT_PER_HOUR: intVar(1, 10_000, 30),
+  TOUCHSTONE_DISPUTE_GLOBAL_LIMIT_PER_HOUR: intVar(1, 1_000_000, 200),
+  TOUCHSTONE_REPRODUCE_GLOBAL_LIMIT_PER_HOUR: intVar(1, 1_000_000, 120),
+  TOUCHSTONE_REPRODUCE_QUEUE_LIMIT: intVar(0, 100, 4),
   TOUCHSTONE_MAX_BODY_BYTES: intVar(1024, 1024 * 1024, 32 * 1024),
   TOUCHSTONE_LOG_LEVEL: z
     .string()
@@ -134,15 +144,19 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env, argv: string[] 
   const e = parsed.data
   const host = e.HOST ?? '127.0.0.1'
   const mode: DataMode = e.TOUCHSTONE_MODE ?? 'demo'
-  const hostsEnv = e.TOUCHSTONE_ALLOWED_HOSTS
-  const allowedHosts =
-    hostsEnv !== undefined && hostsEnv.trim() !== ''
-      ? hostsEnv.trim() === '*'
-        ? []
-        : list(hostsEnv).map((h) => h.toLowerCase())
-      : isLoopback(host)
-        ? ['127.0.0.1', 'localhost', '[::1]']
-        : []
+  const hostsEnv = (e.TOUCHSTONE_ALLOWED_HOSTS ?? '').trim()
+  const anyHostAllowed = hostsEnv === '*'
+  let allowedHosts: string[]
+  if (anyHostAllowed) allowedHosts = []
+  else if (hostsEnv !== '') allowedHosts = list(hostsEnv).map((h) => h.toLowerCase())
+  else if (isLoopback(host)) allowedHosts = ['127.0.0.1', 'localhost', '[::1]']
+  else {
+    // Fail closed: without a Host allowlist a LAN- or internet-bound server is open to DNS rebinding.
+    throw new ConfigError(
+      `Invalid configuration:\n  TOUCHSTONE_ALLOWED_HOSTS: required when HOST=${host} is not a loopback address (DNS-rebinding protection). ` +
+        'List the host names clients use (e.g. touchstone.example.org,localhost), or set it to * to accept any Host explicitly.',
+    )
+  }
   const db = e.TOUCHSTONE_DB ?? '.data/touchstone.db'
   const config: Config = {
     production: argv.includes('--production') || e.NODE_ENV === 'production',
@@ -158,9 +172,13 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env, argv: string[] 
     trustProxy: e.TOUCHSTONE_TRUST_PROXY,
     corsOrigins: e.TOUCHSTONE_CORS_ORIGINS,
     allowedHosts,
+    anyHostAllowed,
     rateLimitPerMinute: e.TOUCHSTONE_RATE_LIMIT_PER_MINUTE,
     disputeRateLimitPerHour: e.TOUCHSTONE_DISPUTE_RATE_LIMIT_PER_HOUR,
     reproduceRateLimitPerHour: e.TOUCHSTONE_REPRODUCE_RATE_LIMIT_PER_HOUR,
+    disputeGlobalLimitPerHour: e.TOUCHSTONE_DISPUTE_GLOBAL_LIMIT_PER_HOUR,
+    reproduceGlobalLimitPerHour: e.TOUCHSTONE_REPRODUCE_GLOBAL_LIMIT_PER_HOUR,
+    reproduceQueueLimit: e.TOUCHSTONE_REPRODUCE_QUEUE_LIMIT,
     maxBodyBytes: e.TOUCHSTONE_MAX_BODY_BYTES,
     logLevel: e.TOUCHSTONE_LOG_LEVEL ?? 'info',
     webDist: resolve(REPO_ROOT, e.TOUCHSTONE_WEB_DIST ?? 'apps/web/dist'),

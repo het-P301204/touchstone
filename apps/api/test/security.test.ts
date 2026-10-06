@@ -4,11 +4,12 @@ import { join } from 'node:path'
 import { afterAll, describe, expect, it } from 'vitest'
 import { Hono } from 'hono'
 import { ConfigError, loadConfig } from '../src/config.ts'
-import { CONTENT_SECURITY_POLICY, clientAddress, rateLimit, tokenMatches } from '../src/security.ts'
+import { CONTENT_SECURITY_POLICY, clientAddress, rateLimit, rateLimitKey, tokenMatches } from '../src/security.ts'
 import type { Env, HttpError } from '../src/security.ts'
+import { pathScrubber } from '../src/refresh.ts'
 import { resolveInside } from '../src/static.ts'
 import { NORTHWIND, RUN_2 } from './fixtures/bundle.ts'
-import { ADMIN, makeApp } from './helpers.ts'
+import { ADMIN, makeApp, stubEngine } from './helpers.ts'
 
 type Json = Record<string, any>
 
@@ -202,6 +203,131 @@ describe('rate limiting', () => {
   })
 })
 
+describe('client keys, map cap and global ceilings', () => {
+  const from = (t: ReturnType<typeof makeApp>, path: string, body: unknown, remoteAddress: string) =>
+    t.app.request(
+      path,
+      { method: 'POST', headers: { 'content-type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) },
+      { incoming: { socket: { remoteAddress } } },
+    )
+
+  it('keys IPv4 by address, IPv4-mapped IPv6 as IPv4, other IPv6 by /64', () => {
+    expect(rateLimitKey('203.0.113.9')).toBe('203.0.113.9')
+    expect(rateLimitKey('::ffff:203.0.113.9')).toBe('203.0.113.9')
+    expect(rateLimitKey('::ffff:cb00:7109')).toBe('203.0.113.9')
+    expect(rateLimitKey('2001:db8:1:2::5')).toBe('2001:db8:1:2::/64')
+    expect(rateLimitKey('2001:DB8:1:2:aaaa:bbbb:cccc:dddd')).toBe('2001:db8:1:2::/64')
+    expect(rateLimitKey('2001:db8:1:3::5')).toBe('2001:db8:1:3::/64')
+    expect(rateLimitKey('fe80::1%eth0')).toBe('fe80:0:0:0::/64')
+    expect(rateLimitKey('[2001:db8::1]')).toBe('2001:db8:0:0::/64')
+    expect(rateLimitKey('local')).toBe('local')
+  })
+
+  it('a client spread across one /64 shares one bucket; another /64 has its own', async () => {
+    const t = makeApp({ disputeRateLimitPerHour: 2 })
+    const s: number[] = []
+    for (let i = 1; i <= 3; i++) s.push((await from(t, '/api/disputes', dispute(), `2001:db8:1:2::${i}`)).status)
+    s.push((await from(t, '/api/disputes', dispute(), '2001:db8:1:3::1')).status)
+    expect(s).toEqual([201, 201, 429, 201])
+    await t.close()
+  })
+
+  it('caps the number of tracked clients, evicting the oldest', async () => {
+    const app = new Hono<Env>()
+    app.onError((e, c) => c.text(e.message, (e as HttpError).status as 429))
+    app.use('*', rateLimit('t', 1, 60_000, false, Date.now, 3))
+    app.get('/', (c) => c.text('ok'))
+    const hit = async (ip: string) => (await app.request('/', {}, { incoming: { socket: { remoteAddress: ip } } })).status
+    expect(await hit('192.0.2.1')).toBe(200)
+    expect(await hit('192.0.2.1')).toBe(429)
+    for (const ip of ['192.0.2.2', '192.0.2.3', '192.0.2.4']) expect(await hit(ip)).toBe(200)
+    // 192.0.2.1 was the oldest key and has been evicted: memory stays bounded at 3 keys.
+    expect(await hit('192.0.2.1')).toBe(200)
+  })
+
+  it('enforces a server-wide hourly dispute ceiling across addresses; rejected bodies do not use it', async () => {
+    const t = makeApp({ disputeGlobalLimitPerHour: 3 })
+    expect((await from(t, '/api/disputes', { ...dispute(), reason: 'NOPE' }, '198.51.100.1')).status).toBe(400)
+    const s: number[] = []
+    for (let i = 2; i <= 6; i++) s.push((await from(t, '/api/disputes', dispute(), `198.51.100.${i}`)).status)
+    expect(s).toEqual([201, 201, 201, 429, 429])
+    const r = await from(t, '/api/disputes', dispute(), '198.51.100.99')
+    expect(((await r.json()) as Json).error.code).toBe('RATE_LIMITED_GLOBAL')
+    expect(r.headers.get('retry-after')).toMatch(/^\d+$/)
+    await t.close()
+  })
+
+  it('enforces a server-wide hourly reproduce ceiling across addresses', async () => {
+    const t = makeApp({ reproduceGlobalLimitPerHour: 2 })
+    const s: number[] = []
+    for (let i = 1; i <= 3; i++) s.push((await from(t, `/api/runs/${RUN_2}/reproduce`, undefined, `203.0.113.${i}`)).status)
+    expect(s).toEqual([200, 200, 429])
+    await t.close()
+  })
+
+  it('runs reproductions one at a time and answers 429 when the queue is full', async () => {
+    const engine = stubEngine()
+    const inner = engine.reproduceRun
+    let running = 0
+    let maxRunning = 0
+    engine.reproduceRun = (inputs, expected) => {
+      running++
+      maxRunning = Math.max(maxRunning, running)
+      const until = performance.now() + 30
+      while (performance.now() < until) {
+        /* CPU-bound, like the real engine */
+      }
+      running--
+      return inner(inputs, expected)
+    }
+    const t = makeApp({ reproduceQueueLimit: 1 }, { engine })
+    const rs = await Promise.all(Array.from({ length: 5 }, (_, i) => from(t, `/api/runs/${RUN_2}/reproduce`, undefined, `203.0.113.${i + 10}`)))
+    const statuses = rs.map((r) => r.status)
+    expect(statuses.filter((x) => x === 200)).toHaveLength(2) // one in flight + one queued
+    expect(statuses.filter((x) => x === 429)).toHaveLength(3)
+    for (const r of rs.filter((x) => x.status === 429)) expect(((await r.json()) as Json).error.code).toBe('REPRODUCE_BUSY')
+    expect(maxRunning).toBe(1)
+    // The queue drains: a later request is served.
+    expect((await from(t, `/api/runs/${RUN_2}/reproduce`, undefined, '203.0.113.50')).status).toBe(200)
+    await t.close()
+  })
+})
+
+describe('refresh status contains no server paths', () => {
+  it('scrubs configured directories, other absolute paths, and keeps URLs', () => {
+    const scrub = pathScrubber({
+      demoFixturesDir: 'C:\\srv\\touchstone\\fixtures\\demo',
+      liveOutDir: '/var/lib/touchstone/live',
+      liveRegistry: null,
+      dataDir: '/srv/data',
+      dbPath: ':memory:',
+      webDist: '/srv/dist',
+    })
+    expect(scrub("ENOENT: no such file or directory, open 'C:\\srv\\touchstone\\fixtures\\demo\\2026-10-06\\manifest.json'")).toBe(
+      "ENOENT: no such file or directory, open 'TOUCHSTONE_DEMO_FIXTURES\\2026-10-06\\manifest.json'",
+    )
+    expect(scrub('wrote /var/lib/touchstone/live/runs/x')).toBe('wrote TOUCHSTONE_LIVE_OUT/runs/x')
+    expect(scrub('open /home/alice/secret.json failed')).toBe('open <path> failed')
+    expect(scrub('open D:/other/place.json failed')).toBe('open <path> failed')
+    expect(scrub('see https://cve.example/api/cve/x and 1/2 and runs/TS-1/')).toBe('see https://cve.example/api/cve/x and 1/2 and runs/TS-1/')
+  })
+
+  it('an engine error naming a path reaches the client scrubbed and the log in full', async () => {
+    const engine = stubEngine()
+    engine.loadDemoInputs = () => {
+      throw new Error("ENOENT: no such file or directory, open '/home/runner/work/touchstone/fixtures/demo/registry/vendors.json'")
+    }
+    const t = makeApp({ adminToken: ADMIN }, { engine })
+    const { jobId } = (await (await t.json('POST', '/api/refresh', {}, t.adminHeaders)).json()) as Json
+    await t.refresh.idle()
+    const text = await (await t.app.request(`/api/refresh/${jobId}`)).text()
+    expect(text).toContain('ENOENT')
+    expect(text).not.toContain('/home/')
+    expect(t.store.getJob(jobId)!.error).toContain('/home/runner')
+    await t.close()
+  })
+})
+
 describe('CORS and origin', () => {
   it('is off by default: no CORS headers, cross-origin POST rejected', async () => {
     const t = makeApp()
@@ -310,6 +436,19 @@ describe('configuration', () => {
     bad({ TOUCHSTONE_MAX_BODY_BYTES: '10' }, /TOUCHSTONE_MAX_BODY_BYTES/)
   })
 
+  it('refuses a non-loopback bind without a Host allowlist, unless * is explicit', () => {
+    expect(() => loadConfig({ HOST: '0.0.0.0' }, [])).toThrow(/TOUCHSTONE_ALLOWED_HOSTS: required when HOST=0\.0\.0\.0/)
+    expect(() => loadConfig({ HOST: '192.168.1.20', TOUCHSTONE_ALLOWED_HOSTS: '' }, [])).toThrow(ConfigError)
+    const listed = loadConfig({ HOST: '0.0.0.0', TOUCHSTONE_ALLOWED_HOSTS: 'Touchstone.Example.org,localhost' }, [])
+    expect(listed.allowedHosts).toEqual(['touchstone.example.org', 'localhost'])
+    expect(listed.anyHostAllowed).toBe(false)
+    const any = loadConfig({ HOST: '0.0.0.0', TOUCHSTONE_ALLOWED_HOSTS: '*' }, [])
+    expect(any.allowedHosts).toEqual([])
+    expect(any.anyHostAllowed).toBe(true)
+    // The Docker image's defaults keep working.
+    expect(loadConfig({ HOST: '0.0.0.0', TOUCHSTONE_ALLOWED_HOSTS: '127.0.0.1,localhost,[::1]' }, []).allowedHosts).toEqual(['127.0.0.1', 'localhost', '[::1]'])
+  })
+
   it('has safe defaults', () => {
     const c = loadConfig({}, [])
     expect(c.host).toBe('127.0.0.1')
@@ -322,5 +461,8 @@ describe('configuration', () => {
     expect(c.allowedHosts).toEqual(['127.0.0.1', 'localhost', '[::1]'])
     expect(loadConfig({}, ['node', 'index.ts', '--production']).production).toBe(true)
     expect(loadConfig({ TOUCHSTONE_TRUST_PROXY: 'true' }, []).trustProxy).toBe(true)
+    expect(c.disputeGlobalLimitPerHour).toBe(200)
+    expect(c.reproduceGlobalLimitPerHour).toBe(120)
+    expect(c.reproduceQueueLimit).toBe(4)
   })
 })

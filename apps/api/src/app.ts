@@ -13,6 +13,7 @@ import type { Context } from 'hono'
 import { z } from 'zod'
 import { GOALS, PLEDGE_SOURCE_URL } from '../../../packages/core/src/methodology/goals.ts'
 import { CURRENT_METHODOLOGY_VERSION, METHODOLOGY_VERSIONS } from '../../../packages/core/src/methodology/versions.ts'
+import { METRIC_DEFINITIONS } from '../../../packages/core/src/measure/definitions.ts'
 import { DISPUTE_TRANSITIONS } from '../../../packages/core/src/model/run.ts'
 import { cleanText } from '../../../packages/core/src/util/sanitize.ts'
 import type { Dispute, DisputeStatus, RunSummary, VendorDetail } from '../../../packages/core/src/model/index.ts'
@@ -21,9 +22,9 @@ import { API_VERSION } from './config.ts'
 import type { Config } from './config.ts'
 import { loadEngine } from './engine.ts'
 import type { Engine, EngineLoader, ReportFormat } from './engine.ts'
-import { ACTIVE_DISPUTE, SIGNATORY_SORTS, VENDOR_CATEGORIES, disputedGoalIds, queryCves, querySignatories } from './queries.ts'
-import { JOB_ID_RE, RefreshRunner, jobView } from './refresh.ts'
-import { HttpError, adminAuth, cors, hostCheck, logger, rateLimit, requestContext, secureHeaders, streamingBodyLimit } from './security.ts'
+import { ACTIVE_DISPUTE, SIGNATORY_SORTS, VENDOR_CATEGORIES, disputedGoalIds, queryCves, querySignatories, searchKey } from './queries.ts'
+import { JOB_ID_RE, RefreshRunner, jobView, pathScrubber } from './refresh.ts'
+import { GlobalCeiling, HttpError, adminAuth, cors, hostCheck, logger, rateLimit, requestContext, secureHeaders, streamingBodyLimit } from './security.ts'
 import type { Env, Log } from './security.ts'
 import { serveStatic } from './static.ts'
 import { StoreConflict } from './store.ts'
@@ -199,6 +200,51 @@ const CveQuery = z.object({
   ...pageQuery(500, 100),
 })
 
+/**
+ * Why a dispute target does not exist in the run named by the dispute, or
+ * null when it does. Every kind is checked against that run's published data:
+ *   GOAL      one of the seven pledge goals
+ *   METRIC    a defined metric
+ *   EVIDENCE  an evidence item in this vendor's detail for the run
+ *   CVE       a record the engine attributed to this vendor, or excluded with this vendor as a candidate
+ *   IDENTITY  one of the vendor's names or alias values, or an identity conflict that involves the vendor
+ */
+export function disputeTargetProblem(
+  t: { kind: (typeof TARGET_KINDS)[number]; id: string },
+  vendorId: string,
+  vendor: RunSummary['vendors'][number]['vendor'],
+  b: Bundle,
+  runId: string,
+  summary: RunSummary,
+): string | null {
+  const shown = t.id.slice(0, 80)
+  switch (t.kind) {
+    case 'GOAL':
+      return GOALS.some((g) => g.id === t.id) ? null : `No goal "${shown}". Goals are G1 to G7.`
+    case 'METRIC':
+      return METRIC_DEFINITIONS.some((m) => m.id === t.id) ? null : `No metric "${shown}" is defined by the methodology.`
+    case 'EVIDENCE': {
+      const d = b.vendorDetail(runId, vendorId)
+      return d?.evidence.some((e) => e.id === t.id) ? null : `Evidence item "${shown}" is not part of ${vendorId}'s evidence in run ${runId}.`
+    }
+    case 'CVE': {
+      const id = t.id.toUpperCase()
+      if (!CVE_ID_RE.test(id)) return `"${shown}" is not a CVE id.`
+      const d = b.vendorDetail(runId, vendorId)
+      const attributed = d?.attributions.some((a) => a.cveId === id && a.vendorId === vendorId) ?? false
+      const excluded = d?.exclusions.some((x) => x.cveId === id && x.candidateVendorIds.includes(vendorId)) ?? false
+      return attributed || excluded ? null : `${id} is neither attributed to ${vendorId} nor excluded with ${vendorId} as a candidate in run ${runId}.`
+    }
+    case 'IDENTITY': {
+      const key = searchKey(t.id)
+      const names = [vendor.canonicalName, ...vendor.aliases.map((a) => a.value)]
+      if (names.some((n) => searchKey(n) === key)) return null
+      if (summary.identityConflicts.some((x) => x.id === t.id && x.vendorIds.includes(vendorId))) return null
+      return `"${shown}" is not a name or alias of ${vendorId}, nor an identity conflict involving it, in run ${runId}.`
+    }
+  }
+}
+
 export function safeFileName(s: string): string {
   const out = s.replace(/[^A-Za-z0-9._-]/g, '_').replace(/^[._]+/, '').slice(0, 120)
   return out || 'report'
@@ -233,6 +279,9 @@ export function createApp(deps: AppDeps): TouchstoneApp {
   const admin = adminAuth(config)
   const disputeLimiter = rateLimit('disputes', config.disputeRateLimitPerHour, 3_600_000, config.trustProxy)
   const reproduceLimiter = rateLimit('reproduce', config.reproduceRateLimitPerHour, 3_600_000, config.trustProxy)
+  const disputeCeiling = new GlobalCeiling('disputes', config.disputeGlobalLimitPerHour, 3_600_000)
+  const reproduceCeiling = new GlobalCeiling('reproduce', config.reproduceGlobalLimitPerHour, 3_600_000)
+  const scrub = pathScrubber(config)
 
   app.onError((err, c) => {
     if (err instanceof HttpError) {
@@ -535,17 +584,31 @@ export function createApp(deps: AppDeps): TouchstoneApp {
     return c.json(inputs)
   })
 
-  let reproducing = false
+  /*
+   * Reproductions are CPU-bound and synchronous, so they run strictly one at a
+   * time: at most `reproduceQueueLimit` wait behind the one in flight, further
+   * requests get 429 at once, and the event loop is yielded before each run so
+   * other requests are served between them. A server-wide hourly ceiling caps
+   * the total whatever the client address.
+   */
+  let reproduceSlots = 0
+  let reproduceChain: Promise<void> = Promise.resolve()
   app.post('/api/runs/:id/reproduce', reproduceLimiter, async (c) => {
     const { b, runId, summary } = runOf(c, c.req.param('id'))
     const inputs = b.inputs(runId)
     if (!inputs) throw new HttpError(404, 'INPUTS_NOT_PUBLISHED', `The inputs of run ${runId} are not published, so it cannot be reproduced.`)
-    if (reproducing) {
+    if (reproduceSlots >= 1 + config.reproduceQueueLimit) {
       c.header('Retry-After', '5')
-      throw new HttpError(503, 'REPRODUCE_BUSY', 'Another reproduction is running. Try again shortly.')
+      throw new HttpError(429, 'REPRODUCE_BUSY', 'Reproductions run one at a time and the queue is full. Try again shortly.', { queueLimit: config.reproduceQueueLimit })
     }
-    reproducing = true
+    reproduceCeiling.check(c)
+    reproduceCeiling.consume()
+    reproduceSlots++
+    let release!: () => void
+    const turn = reproduceChain.then(() => new Promise<void>((r) => setImmediate(r)))
+    reproduceChain = turn.then(() => new Promise<void>((r) => (release = r)))
     try {
+      await turn
       let engine: Engine
       try {
         engine = await engineLoader()
@@ -568,7 +631,9 @@ export function createApp(deps: AppDeps): TouchstoneApp {
         statement: `Re-executed run ${runId} from its published inputs with methodology ${inputs.methodologyVersion}. Nothing was fetched.`,
       })
     } finally {
-      reproducing = false
+      reproduceSlots--
+      // `release` is assigned once this request's turn has been chained; resolve it even on early failure.
+      void turn.then(() => release())
     }
   })
 
@@ -628,26 +693,18 @@ export function createApp(deps: AppDeps): TouchstoneApp {
   })
 
   app.post('/api/disputes', disputeLimiter, async (c) => {
+    // Server-wide ceiling: checked before the body is read, used only by accepted disputes.
+    disputeCeiling.check(c)
     const input = await jsonBody(c, CreateDispute)
-    const { runId, summary } = runOf(c, input.runId)
-    if (!summary.vendors.some((v) => v.vendor.id === input.vendorId)) {
-      throw new HttpError(422, 'VENDOR_NOT_IN_RUN', `Vendor ${input.vendorId} is not part of run ${runId}.`)
-    }
+    const { b, runId, summary } = runOf(c, input.runId)
+    const vendor = summary.vendors.find((v) => v.vendor.id === input.vendorId)
+    if (!vendor) throw new HttpError(422, 'VENDOR_NOT_IN_RUN', `Vendor ${input.vendorId} is not part of run ${runId}.`)
     const t = input.target
-    const targetOk =
-      t.kind === 'GOAL'
-        ? GOALS.some((g) => g.id === t.id)
-        : t.kind === 'METRIC'
-          ? summary.metricDefinitions.some((m) => m.id === t.id)
-          : t.kind === 'CVE'
-            ? CVE_ID_RE.test(t.id)
-            : t.kind === 'EVIDENCE'
-              ? /^EV-[0-9a-f]{6,64}$/.test(t.id)
-              : true
-    if (!targetOk) throw new HttpError(422, 'UNKNOWN_TARGET', `No ${t.kind.toLowerCase()} "${t.id.slice(0, 80)}" in this run to dispute.`)
+    const problem = disputeTargetProblem(t, input.vendorId, vendor.vendor, b, runId, summary)
+    if (problem) throw new HttpError(422, 'UNKNOWN_TARGET', problem, { kind: t.kind, runId })
     const created = store.createDispute({
       vendorId: input.vendorId,
-      target: t,
+      target: t.kind === 'CVE' ? { kind: t.kind, id: t.id.toUpperCase() } : t,
       runId,
       reason: input.reason,
       submitterRole: input.submitterRole,
@@ -656,6 +713,7 @@ export function createApp(deps: AppDeps): TouchstoneApp {
       at: now(),
       actor: `submitter (${input.submitterRole.toLowerCase()})`,
     })
+    disputeCeiling.consume()
     log('info', { operation: 'dispute.create', disputeId: created.id, vendorId: created.vendorId })
     return c.json(created, 201)
   })
@@ -717,16 +775,16 @@ export function createApp(deps: AppDeps): TouchstoneApp {
     const input = await jsonBody(c, StartRefresh, true)
     const job = refresh.start({ datasetVersion: input.datasetVersion, vendorIds: input.vendorIds })
     log('info', { operation: 'refresh.start', jobId: job.id, mode: job.mode })
-    return c.json(jobView(job), 202)
+    return c.json(jobView(job, scrub), 202)
   })
 
-  app.get('/api/refresh', (c) => c.json({ current: refresh.currentJobId, jobs: store.listJobs(10).map(jobView) }))
+  app.get('/api/refresh', (c) => c.json({ current: refresh.currentJobId, jobs: store.listJobs(10).map((j) => jobView(j, scrub)) }))
 
   app.get('/api/refresh/:jobId', (c) => {
     const id = c.req.param('jobId')
     const job = JOB_ID_RE.test(id) ? store.getJob(id) : null
     if (!job) throw new HttpError(404, 'JOB_NOT_FOUND', 'No refresh job with that id.')
-    return c.json(jobView(job))
+    return c.json(jobView(job, scrub))
   })
 
   app.all('/api/*', () => {

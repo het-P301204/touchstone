@@ -142,6 +142,8 @@ describe('read endpoints over the published bundle', () => {
     expect(r.body.total).toBe(3)
     const byId = Object.fromEntries(r.body.rows.map((x: Json) => [x.id, x]))
     expect(byId['DEMO-2026-0001']).toMatchObject({ cnaFieldStatus: 'COMPLETE', enrichedOnly: false, severity: 'HIGH', severitySource: 'CNA', year: 2026 })
+    // Ownership is the engine's attribution; the issuing CNA is reported separately and never treated as the owner.
+    expect(byId['DEMO-2025-0003']).toMatchObject({ vendorIds: [HALCYON], assignerCna: 'northwind', exclusions: [] })
     // CWE came only from CISA-ADP: not credited, reported as enrichment.
     expect(byId['DEMO-2026-0002']).toMatchObject({ cnaFieldStatus: 'MISSING_CWE', enrichedOnly: true, severity: 'CRITICAL', severitySource: 'ADP' })
     // Methodology 1.1.0: a placeholder CWE is not a populated CWE.
