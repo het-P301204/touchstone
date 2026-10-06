@@ -50,7 +50,7 @@ export type MethodologyParameters = {
   latencyOutlierMinDays: number
   /** Policies with fewer extracted words are TOO_SHORT: assessed, but G5 is at most PARTIAL. */
   vdpMinimumPolicyWords: number
-  /** Minimum high-impact advisories before timeliness metrics are reported (else BELOW_MINIMUM_SAMPLE). */
+  /** Below this many high-impact advisories, timeliness is reported at LOW confidence and cannot make G6 (or the figure) VERIFIED. */
   minimumHighImpactAdvisories: number
 }
 

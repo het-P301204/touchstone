@@ -142,7 +142,7 @@ export const METRIC_DEFINITIONS: MetricDefinition[] = [
     numeratorLabel: 'High-impact advisories with a CVE record in the snapshot',
     denominatorLabel: 'High-impact advisories',
     eligibility:
-      'The vendor’s machine-readable advisories (CSAF) published within cveWindowDays before asOf with a stated CRITICAL or HIGH severity. No advisories at all: not measured (NO_SOURCE), not zero.',
+      'The vendor’s machine-readable advisories (CSAF) published within cveWindowDays before asOf with a stated CRITICAL or HIGH severity, de-duplicated by advisory id. A CVE counts only if it was published by asOf. An advisory listing a CVE that appears twice in the snapshot with conflicting content is set aside as undetermined (listed in the breakdown, not in the denominator). No advisories at all: not measured (NO_SOURCE), not zero. A failed CVE source: not measured (SOURCE_FAILED).',
     direction: 'HIGHER_IS_STRONGER_EVIDENCE',
     coverageSlot: true,
   },
@@ -153,7 +153,7 @@ export const METRIC_DEFINITIONS: MetricDefinition[] = [
     dimension: 'CVE_TIMELINESS',
     unit: 'PERCENT',
     formula:
-      'High-impact advisories where every listed CVE exists in the snapshot and was published no later than timelinessToleranceDays after the advisory ÷ high-impact advisories × 100. The tolerance is a TOUCHSTONE methodology parameter, not a CISA threshold. An advisory listing no CVE, or a CVE absent from the snapshot, is not counted as timely.',
+      'High-impact advisories where every listed CVE exists in the snapshot and was published no later than timelinessToleranceDays after the advisory ÷ high-impact advisories × 100. The tolerance is a TOUCHSTONE methodology parameter, not a CISA threshold. An advisory listing no CVE, or a CVE absent from the snapshot, is not counted as timely. The comparison uses exact times, not rounded days. Below minimumHighImpactAdvisories the value is reported with LOW confidence and cannot make the goal VERIFIED.',
     numeratorLabel: 'High-impact advisories with all CVEs published within tolerance',
     denominatorLabel: 'High-impact advisories',
     eligibility: 'As for cve.high_impact_with_cve.',
@@ -316,7 +316,7 @@ export const MIN_PEERS_FOR_PERCENTILE = 10
  */
 export const CONFIDENCE_RULES: { id: string; cap: 'MEDIUM' | 'LOW'; rule: string }[] = [
   { id: 'C1.ATTRIBUTION', cap: 'MEDIUM', rule: 'At least one contributing record was attributed by affected-vendor name only (MEDIUM attribution).' },
-  { id: 'C2.SAMPLE', cap: 'LOW', rule: 'The metric is reported over fewer items than minimumEligibleRecords (advisory-based metrics only; CVE record metrics are not reported below it).' },
+  { id: 'C2.SAMPLE', cap: 'LOW', rule: 'An advisory-based metric is reported over fewer high-impact advisories than minimumHighImpactAdvisories (CVE record metrics are not reported below minimumEligibleRecords at all).' },
   { id: 'C3.STALE', cap: 'MEDIUM', rule: 'A source feeding the metric is STALE under the methodology freshness bands.' },
   { id: 'C3.UNKNOWN_FRESHNESS', cap: 'LOW', rule: 'A source feeding the metric has no successful snapshot, so its age is unknown.' },
   { id: 'C4.CARRIED', cap: 'MEDIUM', rule: 'The observation was carried forward from an earlier snapshot after a refresh did not succeed.' },
