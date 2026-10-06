@@ -485,7 +485,10 @@ ${disclosure}
 <p>You are authorized to test ${name} products for security vulnerabilities in accordance with this policy.</p>
 <p>Report suspected vulnerabilities by email to security@${d}.</p>
 <p>We ask that you allow us 60 days to remediate before you publish details of the issue.</p>
-<p>${name} will review reports and respond at its discretion.</p>`,
+<p>${name} will review reports and respond at its discretion.</p>
+<h2>What to include</h2><p>A good report describes the issue, the affected product and version, and the steps needed to reproduce it.</p>
+<p>We aim to acknowledge each report within five business days and to keep the reporter informed of our progress until the issue is resolved.</p>
+<p>Thank you for helping us protect our customers and their data.</p>`,
       )
     case 'PROHIBITIVE':
       return page(
@@ -495,7 +498,10 @@ ${disclosure}
 <p>Researchers must obtain prior written permission from Gravelpoint before testing any system.</p>
 <p>Report vulnerabilities by email to security@${d}.</p>
 <p>Gravelpoint reserves the right to pursue legal action against anyone who accesses its systems without authorization.</p>
-<p>You must not disclose any vulnerability information to third parties without our written consent.</p>`,
+<p>You must not disclose any vulnerability information to third parties without our written consent.</p>
+<h2>What to include</h2><p>A good report describes the issue, the affected product and version, and the steps needed to reproduce it.</p>
+<p>We aim to acknowledge each report within five business days and to keep the reporter informed of our progress until the issue is resolved.</p>
+<p>Thank you for helping us protect our customers and their data.</p>`,
       )
     case 'NARROWING': {
       if (version < NARROWING_FROM) {
@@ -528,7 +534,10 @@ ${disclosure}`,
 <p>${name} authorizes good-faith security testing of in-scope assets.</p>
 <p>Submit findings through this platform&rsquo;s report form.</p>
 <p>${name} will not take legal action against researchers who follow this policy.</p>
-<p>Reporters may publish their findings 90 days after submission or once a fix is released.</p>`,
+<p>Reporters may publish their findings 90 days after submission or once a fix is released.</p>
+<h2>What to include</h2><p>A good report describes the issue, the affected product and version, and the steps needed to reproduce it.</p>
+<p>We aim to acknowledge each report within five business days and to keep the reporter informed of our progress until the issue is resolved.</p>
+<p>Thank you for helping us protect our customers and their data.</p>`,
       )
   }
 }
@@ -613,7 +622,9 @@ function registry(): Vendor[] {
       aliases,
       signatoryStatus: 'UNKNOWN',
       category: v.category,
-      domains: v.vdp === 'PLATFORM' ? [v.domain, 'disclosure-platform.example'] : [v.domain],
+      // A shared disclosure platform is never one of the vendor's domains; the program URL is tied
+      // to the vendor through vdpPolicyUrl instead.
+      domains: [v.domain],
       claims: [],
       synthetic: true,
     }
@@ -818,7 +829,7 @@ function scenariosMd(recs: RecSpec[]): string {
     '1.1.0 from 2026-07-06 (placeholder CWEs stop counting as populated).',
     '',
     'Expected outcomes below are stated at the level the pipeline determines (attribution, field gaps, VDP criterion',
-    'states); the "Goal" lines are the intended reading under the scoring rules in the build contract.',
+    'states); the "Goal" lines are the intended reading under the scoring rules in docs/methodology.md.',
     '',
     '## Vendors',
     '',

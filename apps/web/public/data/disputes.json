@@ -6,7 +6,7 @@
       "kind": "CVE",
       "id": "DEMO-2024-1028"
     },
-    "runId": "TS-2026-10-06-5F78",
+    "runId": "TS-2026-10-06-3CC6",
     "reason": "INCORRECT_VENDOR_ATTRIBUTION",
     "submitterRole": "VENDOR",
     "statement": "This record names our product line, but the affected component ships only in the other vendor’s appliance. We ask that it be attributed to them, not left unattributed.",
@@ -33,7 +33,7 @@
       "kind": "METRIC",
       "id": "cve.cpe_namespace_consistency"
     },
-    "runId": "TS-2026-07-06-6BAB",
+    "runId": "TS-2026-07-06-D331",
     "reason": "INCORRECT_PRODUCT_MAPPING",
     "submitterRole": "RESEARCHER",
     "statement": "Several CPEs use the vendor’s pre-acquisition namespace. The registry should list both namespaces with the acquisition as evidence.",
@@ -63,19 +63,19 @@
         "to": "CORRECTED",
         "actor": "reviewer",
         "note": "Registry decision recorded. The original run is unchanged; the corrected figure appears in the later run.",
-        "correctedInRunId": "TS-2026-10-06-5F78"
+        "correctedInRunId": "TS-2026-10-06-3CC6"
       }
     ],
     "synthetic": true
   },
   {
     "id": "DSP-0004",
-    "vendorId": "brightwater-networks",
+    "vendorId": "basalt-infrastructure",
     "target": {
       "kind": "METRIC",
       "id": "cve.cwe_coverage"
     },
-    "runId": "TS-2026-10-06-5F78",
+    "runId": "TS-2026-10-06-3CC6",
     "reason": "METHODOLOGY_ERROR",
     "submitterRole": "VENDOR",
     "statement": "NVD shows a CWE for these records, so CWE coverage should be 100%.",

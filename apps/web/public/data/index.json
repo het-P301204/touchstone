@@ -1,52 +1,52 @@
 {
   "mode": "DEMO",
-  "latestRunId": "TS-2026-10-06-5F78",
+  "latestRunId": "TS-2026-10-06-3CC6",
   "builtFrom": "scripts/build-demo.ts over fixtures/demo (synthetic data)",
   "runs": [
     {
-      "runId": "TS-2025-10-06-F917",
+      "runId": "TS-2025-10-06-276E",
       "datasetVersion": "2025-10-06",
       "asOf": "2025-10-06T12:00:00Z",
       "methodologyVersion": "1.0.0",
       "mode": "DEMO",
-      "outputsHash": "112555c8407805ce541e887afbc7c8f1e06d8069cec933743a6a5565001d6f46",
-      "inputsHash": "f9173ec7fdd026e2bfd975658549ad04714f181007fb085d8b20908f5aef13c7"
+      "outputsHash": "cb0279bd3166b4f9b3fa60c406967868ab56f787c4f4320a8073122f3e37ebe7",
+      "inputsHash": "276ecef066836428f6f25b9e55bd95a9ec0ce43099d8c42f5eb240b63f4395c4"
     },
     {
-      "runId": "TS-2026-01-06-78B7",
+      "runId": "TS-2026-01-06-2F0E",
       "datasetVersion": "2026-01-06",
       "asOf": "2026-01-06T12:00:00Z",
       "methodologyVersion": "1.0.0",
       "mode": "DEMO",
-      "outputsHash": "0fe3d54074df3a0e3347147eea1dd5549ef6c7686be42f40d03060f3c84fa1c4",
-      "inputsHash": "78b7fb6cbd69f3259e07a16420a26a86fcf4f52367d0758a574de11e070a84bb"
+      "outputsHash": "4e717f2e391964ede0a9a17d4508fac2a0b6eed194bc7213d3ec03ac5566a124",
+      "inputsHash": "2f0ee620106b33baddb85b834fd324e781de3fbb87cadc769ebd211dc4206ec4"
     },
     {
-      "runId": "TS-2026-04-06-F105",
+      "runId": "TS-2026-04-06-814A",
       "datasetVersion": "2026-04-06",
       "asOf": "2026-04-06T12:00:00Z",
       "methodologyVersion": "1.0.0",
       "mode": "DEMO",
-      "outputsHash": "310f6d32d6abb156dea02f041d7a6481f8294af446b26bcb33dbd495c53f98b5",
-      "inputsHash": "f1056cc1cb323560e327e8c85d6748df32455801c93bba6be04fbf496cac27a8"
+      "outputsHash": "9aa347fd763905247fe3a1638b9880dd8fee97c2c68c13917c49e6967c48d0f6",
+      "inputsHash": "814aebb0869c2fcbf8fe08842043cfaf0486eed88f09ee64d37f1191a6abb013"
     },
     {
-      "runId": "TS-2026-07-06-6BAB",
+      "runId": "TS-2026-07-06-D331",
       "datasetVersion": "2026-07-06",
       "asOf": "2026-07-06T12:00:00Z",
       "methodologyVersion": "1.1.0",
       "mode": "DEMO",
-      "outputsHash": "3d1e0a1119e8ff4a085350a153086b892d9b3e417a3deba99b4d4a847a906aa6",
-      "inputsHash": "6bab2b9f68314eba53da42b237d25c525c9ef70a6f8ea4d2df5213079607256c"
+      "outputsHash": "7378650ed5055e6b83a8138b88de98d5378fff609891cd9355438091a4587628",
+      "inputsHash": "d331b77c837379e57dcccd5b22c07dac1cb62f1c5085d9ae50625dd5fd438987"
     },
     {
-      "runId": "TS-2026-10-06-5F78",
+      "runId": "TS-2026-10-06-3CC6",
       "datasetVersion": "2026-10-06",
       "asOf": "2026-10-06T12:00:00Z",
       "methodologyVersion": "1.1.0",
       "mode": "DEMO",
-      "outputsHash": "264e47145dac0fefdd57b46e39b4bbff0e4f7f2afc8f0fbe10267ca4a1b79901",
-      "inputsHash": "5f782532a4291c1df701edc33b613a644831ee7d63d351d872316a7bc446a6a4"
+      "outputsHash": "4a381fee2dee974b603b105f493b8e600e8bb775de05c98ad68aeb412c8646bc",
+      "inputsHash": "3cc6630cf95c78e6e25a9d2dd72c2aa1123c2e66809e873c554fa03f0d26093e"
     }
   ]
 }

@@ -2252,8 +2252,7 @@
     "signatoryStatus": "UNKNOWN",
     "category": "INFRASTRUCTURE",
     "domains": [
-      "basalt.example",
-      "disclosure-platform.example"
+      "basalt.example"
     ],
     "claims": [],
     "synthetic": true,

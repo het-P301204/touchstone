@@ -102,8 +102,8 @@ export const VENDORS: VendorSpec[] = [
     affectedNames: ['Brightwater Networks'], products: ['Riverline Router', 'Brightwater OS', 'Estuary Switch'], cpePart: 'o',
     signedOn: '2024-05-08', records: 36, cwe: { real: 0.95, placeholder: 0 }, cpe: { rate: 0.35, quality: GOOD }, adpEnrichment: { cwe: 0, cpe: 0 },
     csaf: true, timelyShare: 0.3, advisoriesWithoutCve: 3, vdp: 'STRONG',
-    scenario: 'Missing CPE: about 65% of CNA containers carry no CPE. CVE issuance lags advisories (most CVEs 5-45 days after the advisory); three high-impact advisories list no CVE.',
-    expected: ['Goal 6 PARTIAL: CPE coverage about 35%, gap NOT_PROVIDED', 'CVE timeliness low; latency median > 1 day', 'high_impact_with_cve below 100%', 'LATENCY_OUTLIER possible'],
+    scenario: 'Missing CPE: CNA CPEs are drawn with probability 0.35, which for this seed gave 9 of 36 records (25%); the rest carry no CPE. CVE issuance lags advisories (most CVEs 5-45 days after the advisory); three high-impact advisories list no CVE.',
+    expected: ['Goal 6 PARTIAL: CPE coverage about 25% (20-30% across versions), gap NOT_PROVIDED', 'CVE timeliness low; latency median > 1 day', 'high_impact_with_cve below 100%', 'LATENCY_OUTLIER possible'],
   },
   {
     id: 'cobalt-ridge-software', name: 'Cobalt Ridge Software', legalName: 'Cobalt Ridge Software Ltd', listing: 'Cobalt Ridge Software',
