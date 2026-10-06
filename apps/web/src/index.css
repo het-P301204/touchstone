@@ -1,0 +1,250 @@
+/*
+ * TOUCHSTONE base stylesheet.
+ *
+ * Tokens are RGB channel triples so Tailwind opacity modifiers compose.
+ * Light mode is primary (prints well, screenshots well); dark mode is warm
+ * graphite with ivory text, never blue-black.
+ *
+ * Measured contrast (WCAG 2.x), light on paper / paper-2 / surface:
+ *   ink 14.9 / 13.7 / 16.0   ink-2 6.9 / 6.3 / 7.3   ink-3 5.1 / 4.7 / 5.5
+ *   vermilion-ink 5.2 / 4.8   marigold-ink 5.6 / 5.1   sage-ink 6.1 / 5.5
+ *   iris-ink 6.6 / 6.1   plum-ink 9.3 / 8.5
+ * Dark on paper / paper-2 / surface:
+ *   ink 14.8 / 13.5 / 13.0   ink-2 8.7 / 8.0 / 7.7   ink-3 6.0 / 5.5 / 5.3
+ *   vermilion-ink 6.9   marigold-ink 9.8   sage-ink 9.1   iris-ink 8.6   plum-ink 8.2
+ * Filled accent chips carry graphite text: vermilion 4.8, marigold 7.7, sage 5.6, iris 4.7.
+ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --paper: 246 242 234;
+  --paper-2: 238 232 220;
+  --paper-3: 226 218 203;
+  --surface: 252 250 245;
+  --surface-raised: 255 254 251;
+  --ink: 31 30 28;
+  --ink-2: 87 83 75;
+  --ink-3: 107 102 92;
+  --line: 222 213 198;
+  --line-strong: 195 185 166;
+  /* The "test surface": a graphite slab used by the hero and the mark. */
+  --slab: 36 35 32;
+  --slab-2: 48 47 43;
+  --slab-ink: 241 236 226;
+  --slab-dim: 168 161 147;
+  --slab-line: 74 72 66;
+  --slab-iris: 189 176 216;
+  --vermilion: 232 93 74;
+  --vermilion-ink: 177 63 46;
+  --marigold: 216 170 66;
+  --marigold-ink: 126 91 14;
+  --sage: 126 158 128;
+  --sage-ink: 62 100 67;
+  --iris: 145 129 175;
+  --iris-ink: 93 76 134;
+  --plum: 77 58 76;
+  --plum-ink: 77 58 76;
+  --focus: 31 30 28;
+  --shadow: 66 52 30;
+  --graphite-fixed: 31 30 28;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --paper: 27 26 25;
+  --paper-2: 35 34 32;
+  --paper-3: 46 45 42;
+  --surface: 38 37 35;
+  --surface-raised: 45 44 41;
+  --ink: 241 236 226;
+  --ink-2: 190 183 169;
+  --ink-3: 158 151 135;
+  --line: 60 58 54;
+  --line-strong: 84 81 76;
+  --slab: 20 19 18;
+  --slab-2: 33 32 30;
+  --slab-ink: 241 236 226;
+  --slab-dim: 160 153 139;
+  --slab-line: 66 64 59;
+  --slab-iris: 189 176 216;
+  --vermilion: 232 93 74;
+  --vermilion-ink: 240 134 118;
+  --marigold: 216 170 66;
+  --marigold-ink: 227 190 106;
+  --sage: 126 158 128;
+  --sage-ink: 166 195 167;
+  --iris: 145 129 175;
+  --iris-ink: 189 176 216;
+  --plum: 120 92 118;
+  --plum-ink: 200 169 197;
+  --focus: 241 236 226;
+  --shadow: 0 0 0;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    scroll-padding-top: 5rem;
+  }
+
+  body {
+    @apply bg-paper font-sans text-ink antialiased;
+    overflow-wrap: break-word;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: rgb(var(--marigold) / 0.4);
+    color: rgb(var(--ink));
+  }
+
+  :focus-visible {
+    outline: 2px solid rgb(var(--focus));
+    outline-offset: 2px;
+  }
+
+  code,
+  kbd,
+  samp,
+  pre {
+    @apply font-mono;
+  }
+
+  [hidden] {
+    display: none !important;
+  }
+}
+
+@layer components {
+  /* Every grid/flex child that holds text must be allowed to shrink. */
+  .ts-panel {
+    @apply min-w-0 rounded-panel border border-line bg-surface shadow-soft;
+  }
+  .ts-card {
+    @apply min-w-0 rounded-card border border-line bg-surface;
+  }
+  .ts-eyebrow {
+    @apply font-mono text-label uppercase text-ink-3;
+  }
+  .ts-num {
+    @apply font-mono;
+    font-variant-numeric: tabular-nums;
+  }
+  /* Identifiers (vendor names, CVE ids, hashes) may be arbitrarily long. */
+  .ts-ident {
+    overflow-wrap: anywhere;
+    word-break: normal;
+    min-width: 0;
+  }
+  .ts-link {
+    @apply font-semibold text-ink underline decoration-line-strong decoration-1 underline-offset-[3px] transition-colors hover:decoration-ink;
+  }
+  .ts-prose p + p {
+    margin-top: 0.9em;
+  }
+  .ts-hatch {
+    background-image: repeating-linear-gradient(135deg, rgb(var(--iris) / 0.42) 0 1.5px, transparent 1.5px 6px);
+  }
+  .ts-hatch-soft {
+    background-image: repeating-linear-gradient(135deg, rgb(var(--iris) / 0.2) 0 1px, transparent 1px 7px);
+  }
+  .ts-unknown {
+    background-image: repeating-linear-gradient(90deg, rgb(var(--ink-3) / 0.45) 0 4px, transparent 4px 8px);
+    background-size: 100% 1.5px;
+    background-repeat: no-repeat;
+    background-position: center;
+  }
+  .ts-dotgrid {
+    background-image: radial-gradient(rgb(var(--ink) / 0.07) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+  /* Positioned so absolutely positioned descendants (sr-only text) are clipped by the scroller instead of widening the page. */
+  .ts-scroll-thin {
+    position: relative;
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--line-strong)) transparent;
+  }
+  /* Data tables. Never named after a Tailwind utility (no .table-row). */
+  .ts-tbl {
+    @apply w-full border-separate border-spacing-0 text-left text-sm;
+  }
+  .ts-tbl thead th {
+    @apply sticky top-0 z-[1] border-b border-line bg-paper-2 px-3 py-2.5 font-mono text-label font-medium uppercase text-ink-3;
+  }
+  .ts-tbl td,
+  .ts-tbl tbody th {
+    @apply border-b border-line px-3 py-3 align-middle;
+  }
+  .ts-tbl tbody tr:last-child td {
+    @apply border-b-0;
+  }
+  .ts-tbl tbody tr.ts-rowlink {
+    @apply cursor-pointer transition-colors;
+  }
+  .ts-tbl tbody tr.ts-rowlink:hover td {
+    @apply bg-paper-2/60;
+  }
+  .ts-input {
+    @apply h-10 w-full min-w-0 rounded-control border border-line bg-surface-raised px-3 text-sm text-ink placeholder:text-ink-3 transition-colors focus-visible:border-ink focus-visible:outline-none;
+  }
+  .ts-select {
+    @apply h-10 min-w-0 max-w-full rounded-control border border-line bg-surface-raised pl-3 pr-8 text-sm text-ink transition-colors focus-visible:border-ink focus-visible:outline-none;
+  }
+}
+
+/*
+ * Keyframes used from hand-written classes. Tailwind 3 only emits keyframes
+ * for animate-* utilities it scans, so these are declared here, unlayered.
+ */
+@keyframes ts-pulse-dot {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes ts-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+.ts-pulse {
+  animation: ts-pulse-dot 1.4s ease-in-out infinite;
+}
+.ts-skeleton {
+  background: linear-gradient(90deg, rgb(var(--paper-2)) 0%, rgb(var(--paper-3)) 50%, rgb(var(--paper-2)) 100%);
+  background-size: 200% 100%;
+  animation: ts-shimmer 1.6s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ts-pulse,
+  .ts-skeleton {
+    animation: none;
+  }
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media print {
+  .ts-noprint {
+    display: none !important;
+  }
+  body {
+    background: white;
+  }
+}

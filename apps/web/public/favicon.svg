@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="TOUCHSTONE">
+  <defs>
+    <linearGradient id="streak" x1="7" y1="20" x2="24" y2="11" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#D8AA42" stop-opacity="0.15"/>
+      <stop offset="0.55" stop-color="#D8AA42" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#E9C46F"/>
+    </linearGradient>
+  </defs>
+  <rect x="1.5" y="1.5" width="29" height="29" rx="8" fill="#24231F"/>
+  <path d="M7.5 19.5 L23.5 11.5" stroke="url(#streak)" stroke-width="4.2" stroke-linecap="round"/>
+  <circle cx="23.5" cy="11.5" r="1.6" fill="#F1ECE2"/>
+  <path d="M8 25.2v-1.6M12 25.2v-2.6M16 25.2v-1.6M20 25.2v-2.6M24 25.2v-1.6" stroke="#A8A193" stroke-width="1.1" stroke-linecap="round"/>
+</svg>

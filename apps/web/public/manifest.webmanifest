@@ -1,0 +1,11 @@
+{
+  "name": "TOUCHSTONE — Secure by Design Commitment Verification",
+  "short_name": "TOUCHSTONE",
+  "description": "Measures the publicly observable evidence behind CISA Secure by Design Pledge commitments, with a reproducible run for every figure.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F6F2EA",
+  "theme_color": "#F6F2EA",
+  "icons": [{ "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}
