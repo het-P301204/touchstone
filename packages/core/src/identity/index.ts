@@ -193,7 +193,9 @@ function mentions(haystack: string, needle: string): boolean {
 
 /**
  * Attribute CVE records to vendors. Rules, in order:
- *   1. ASSIGNER_IS_VENDOR_CNA (HIGH): the assigner short name or org id is the vendor's CNA alias.
+ *   1. ASSIGNER_IS_VENDOR_CNA (HIGH): the assigner short name or org id is the vendor's CNA alias,
+ *      unless the record's affected vendor / CNA CPE names a different registered vendor and not
+ *      this one (a CNA assigning for another vendor's product): then AMBIGUOUS_VENDOR.
  *   2. AFFECTED_VENDOR_AND_CPE (HIGH): a cna.affected vendor is the vendor's AFFECTED_VENDOR alias
  *      and a well-formed CNA CPE uses one of the vendor's CPE_VENDOR namespaces.
  *   3. AFFECTED_VENDOR_ONLY (MEDIUM): the affected vendor alias without a corroborating CNA CPE.
@@ -269,6 +271,24 @@ export function attributeCves(
         continue
       }
       const vendorId = vendorIds[0]!
+      // The assigner rule must not override structured evidence naming a DIFFERENT registered
+      // vendor (a vendor CNA can assign for another vendor's product). When the affected vendor or a
+      // CNA CPE namespace matches another registered vendor and not the assigner's vendor, the record
+      // fits two vendors: exclude it. When the structured data names the assigner's vendor, or no
+      // registered vendor at all, the assigner rule stands.
+      const structured = new Set<string>()
+      for (const a of r.affected) for (const v of lookup(idx, 'AFFECTED_VENDOR', a.vendor)) structured.add(v)
+      for (const c of r.cna.cpes) if (c.wellFormed && c.vendor) for (const v of lookup(idx, 'CPE_VENDOR', c.vendor)) structured.add(v)
+      if (structured.size > 0 && !structured.has(vendorId)) {
+        const others = sortedUnique(structured)
+        exclusions.push({
+          cveId: id,
+          reason: 'AMBIGUOUS_VENDOR',
+          candidateVendorIds: sortedUnique([vendorId, ...others]),
+          note: `The assigner is ${vendorId}'s CNA, but the record's affected vendor / CPE data names ${others.join(', ')} and not ${vendorId}. A CNA can assign for another vendor's product, so the record is not attributed to either.`,
+        })
+        continue
+      }
       attributions.push({
         cveId: id,
         vendorId,
@@ -286,11 +306,8 @@ export function attributeCves(
     }
     if (affMatches.length > 0) {
       const vendorIds = sortedUnique(affMatches.map((m) => m.vendorId))
-      const conflictedAff = affMatches.filter((m) => isConflicted(conflictKeys, 'AFFECTED_VENDOR', m.value))
-      if (conflictedAff.length > 0) {
-        exclusions.push({ cveId: id, reason: 'IDENTITY_CONFLICT', candidateVendorIds: vendorIds, note: `Affected vendor "${conflictedAff[0]!.value}" is in an identity conflict.` })
-        continue
-      }
+      // AFFECTED_VENDOR names are never identity conflicts (see detectIdentityConflicts): a shared
+      // affected name is resolved per record, as AMBIGUOUS_VENDOR, right here.
       if (vendorIds.length > 1) {
         exclusions.push({
           cveId: id,

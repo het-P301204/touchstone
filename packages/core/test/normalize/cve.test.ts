@@ -190,3 +190,20 @@ describe('normalizeCveRecord: synthetic shapes', () => {
     expect(ra.ok && rb.ok && ra.record.sourceHash === rb.record.sourceHash).toBe(true)
   })
 })
+
+describe('dates and depth', () => {
+  it('rejects impossible calendar dates instead of rolling them over', () => {
+    const r = normalizeCveRecord(record({ meta: { datePublished: '2026-02-30T00:00:00Z', dateUpdated: '2026-04-31', dateReserved: '2024-02-29T23:59:59Z' } }), ctx)
+    expect(r.ok).toBe(true)
+    if (!r.ok) return
+    expect(r.record.datePublished).toBeUndefined()
+    expect(r.record.dateUpdated).toBeUndefined()
+    expect(r.record.dateReserved).toBe('2024-02-29T23:59:59.000Z')
+  })
+  it('a deeply nested record is an error, not a stack overflow', () => {
+    let deep: unknown = 1
+    for (let i = 0; i < 5_000; i++) deep = [deep]
+    const r = normalizeCveRecord(record({ cna: { x_deep: deep } }), ctx)
+    expect(r).toMatchObject({ ok: false, error: 'record nested too deeply' })
+  })
+})

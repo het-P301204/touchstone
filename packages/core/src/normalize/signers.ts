@@ -9,7 +9,8 @@
 
 import { htmlToText } from '../text/html.ts'
 
-const HEADING = /<h([1-6])\b[^>]*>\s*([0-9][0-9,]{0,8})\s+Companies\s*<\/h\1\s*>/i
+// Bounded attribute scan ([^>]{0,200}) and bounded whitespace keep the search linear in the input.
+const HEADING = /<h([1-6])\b[^>]{0,200}>\s{0,50}([0-9][0-9,]{0,8})\s{1,50}Companies\s{0,50}<\/h\1\s{0,10}>/i
 
 /** Lower-cases ASCII letters only, so indexes stay aligned with the original string. */
 function asciiLower(s: string): string {

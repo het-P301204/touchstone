@@ -55,12 +55,25 @@ describe('parseSecurityTxt', () => {
     expect(s.warnings.filter((w) => w.startsWith('EXPIRED'))).toEqual([])
   })
 
-  it('reports an expired file, a missing Contact, multiple Expires and unknown fields', () => {
-    const s = parseSecurityTxt('Expires: 2025-01-01T00:00:00Z\nExpires: 2026-01-01T00:00:00Z\nFoo: bar\nPolicy: http://x.example/p\n', ctx)
+  it('reports an expired file, a missing Contact, duplicate Expires and unknown fields', () => {
+    const s = parseSecurityTxt('Expires: 2025-01-01T00:00:00Z\nExpires: 2025-01-01T00:00:00.000Z\nFoo: bar\nPolicy: http://x.example/p\n', ctx)
     expect(s.expires).toBe('2025-01-01T00:00:00.000Z')
     const codes = s.warnings.map((w) => w.split(':')[0])
     expect(codes).toEqual(expect.arrayContaining(['NO_CONTACT', 'MULTIPLE_EXPIRES', 'EXPIRED', 'UNKNOWN_FIELD', 'INSECURE_URI']))
+    expect(codes).not.toContain('CONTRADICTORY_EXPIRES')
     expect(securityTxtExpired(s, ctx.asOf)).toBe(true)
+  })
+
+  it('contradictory Expires values: none is used, and the file says so', () => {
+    const s = parseSecurityTxt('Contact: mailto:a@b.example\nExpires: 2027-01-01T00:00:00Z\nExpires: 2025-01-01T00:00:00Z\n', ctx)
+    expect(s.expires).toBeUndefined()
+    expect(s.warnings.some((w) => w.startsWith('CONTRADICTORY_EXPIRES'))).toBe(true)
+  })
+
+  it('a placeholder Contact is warned about and not stored', () => {
+    const s = parseSecurityTxt('Contact: none\nContact: n/a\nContact: mailto:security@v.example\nExpires: 2027-01-01T00:00:00Z\n', ctx)
+    expect(s.contacts).toEqual(['mailto:security@v.example'])
+    expect(s.warnings.filter((w) => w.startsWith('BAD_CONTACT_URI'))).toHaveLength(2)
   })
 
   it('handles CRLF, comments, PGP cleartext framing and dash-escaping', () => {

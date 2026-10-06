@@ -15,17 +15,26 @@
 
 /** Inclusive code point ranges that are removed. Exported for documentation and tests. */
 export const INVISIBLE_CODE_POINT_RANGES: ReadonlyArray<readonly [number, number]> = [
+  // Sorted ascending and non-overlapping: isInvisibleCodePoint relies on it.
   [0x0000, 0x0008], // C0 controls before TAB
   [0x000b, 0x000c], // VT, FF (TAB, LF, CR are kept)
   [0x000e, 0x001f], // remaining C0 controls
   [0x007f, 0x009f], // DEL and C1 controls
+  [0x00ad, 0x00ad], // SOFT HYPHEN (invisible unless at a line break)
+  [0x034f, 0x034f], // COMBINING GRAPHEME JOINER
   [0x061c, 0x061c], // ARABIC LETTER MARK
-  [0x180e, 0x180e], // MONGOLIAN VOWEL SEPARATOR
+  [0x115f, 0x1160], // HANGUL CHOSEONG / JUNGSEONG FILLER
+  [0x180b, 0x180e], // MONGOLIAN FREE VARIATION SELECTORS, VOWEL SEPARATOR
   [0x200b, 0x200f], // ZWSP, ZWNJ, ZWJ, LRM, RLM
   [0x2028, 0x202e], // LINE/PARAGRAPH SEPARATOR, LRE, RLE, PDF, LRO, RLO
+  [0x2060, 0x2064], // WORD JOINER, FUNCTION APPLICATION, INVISIBLE TIMES / SEPARATOR / PLUS
   [0x2066, 0x2069], // LRI, RLI, FSI, PDI
+  [0x3164, 0x3164], // HANGUL FILLER
+  [0xfe00, 0xfe0f], // VARIATION SELECTORS 1-16
   [0xfeff, 0xfeff], // ZERO WIDTH NO-BREAK SPACE / BOM
+  [0xffa0, 0xffa0], // HALFWIDTH HANGUL FILLER
   [0xe0000, 0xe007f], // TAG characters
+  [0xe0100, 0xe01ef], // VARIATION SELECTORS SUPPLEMENT
 ]
 
 /** True when the code point is one `stripInvisible` removes (lone surrogates aside). */
@@ -42,7 +51,7 @@ function isCandidateUnit(c: number): boolean {
   if (c < 0x20) return c !== 0x09 && c !== 0x0a && c !== 0x0d
   if (c < 0x7f) return false
   if (c <= 0x9f) return true
-  if (c < 0x061c) return false
+  if (c < 0x00ad) return false
   if (c >= 0xd800 && c <= 0xdfff) return true // surrogates: tag characters live in plane 14; lone surrogates are dropped
   return isInvisibleCodePoint(c)
 }
@@ -71,7 +80,7 @@ export function stripInvisible(s: string): { text: string; removed: number } {
       if (d >= 0xdc00 && d <= 0xdfff) {
         width = 2
         const cp = (c - 0xd800) * 0x400 + (d - 0xdc00) + 0x10000
-        drop = cp >= 0xe0000 && cp <= 0xe007f
+        drop = isInvisibleCodePoint(cp) // tag characters and supplementary variation selectors
       } else {
         drop = true // lone high surrogate
       }

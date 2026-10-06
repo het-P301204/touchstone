@@ -17,7 +17,7 @@
 import type { ContainerData, CpeRef, CveRecord, CveState, CvssRef, CweRef, FieldGap, Severity } from '../model/index.ts'
 import { cleanText } from '../util/sanitize.ts'
 import { sha256Text } from '../util/sha256.ts'
-import { arr, canonicalStringify, isObject, isoDate, num, own, str } from './json.ts'
+import { MAX_JSON_DEPTH, arr, canonicalStringify, isObject, isoDate, jsonDepth, num, own, str } from './json.ts'
 
 export const CVE_ID_PATTERN = /^CVE-\d{4}-\d{4,}$/
 export const DEMO_ID_PATTERN = /^DEMO-\d{4}-\d{4,}$/
@@ -246,6 +246,10 @@ const DATA_VERSION = /^5\.[0-2](?:\.\d{1,3})?$/
  */
 export function normalizeCveRecord(json: unknown, ctx: { snapshotId: string; synthetic: boolean }): NormalizeCveResult {
   if (!isObject(json)) return { ok: false, error: 'record is not a JSON object' }
+  if (jsonDepth(json) > MAX_JSON_DEPTH) {
+    const id = str(own(json, 'cveMetadata'), 'cveId')
+    return id !== undefined && id.length <= 40 ? { ok: false, error: 'record nested too deeply', cveId: id } : { ok: false, error: 'record nested too deeply' }
+  }
   const meta = own(json, 'cveMetadata')
   const rawId = str(meta, 'cveId')
   const cveId = rawId === undefined ? undefined : rawId.trim()

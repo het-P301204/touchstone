@@ -233,3 +233,20 @@ describe('matchSignatories', () => {
     expect(matchSignatories(['Twin Co'], [a, b]).ambiguous).toEqual([{ listedName: 'Twin Co', vendorIds: ['a', 'b'] }])
   })
 })
+
+describe('assigner vs structured evidence', () => {
+  const acme = vendor('acme', [['CNA_SHORT_NAME', 'acme-cna'], ['CPE_VENDOR', 'acme'], ['AFFECTED_VENDOR', 'Acme']])
+  const globex = vendor('globex', [['CPE_VENDOR', 'globex'], ['AFFECTED_VENDOR', 'Globex']])
+  const both = [acme, globex]
+  const assigned = (over: Partial<CveRecord> & { cpes?: string[] }) => cve('CVE-2026-0900', { assigner: { orgId: 'x', shortName: 'acme-cna' }, ...over })
+  it('excludes as AMBIGUOUS_VENDOR when affected/CPE data names another registered vendor and not the assigner', () => {
+    const { attributions, exclusions } = attributeCves([assigned({ affected: [{ vendor: 'Globex', product: 'Router' }], cpes: ['cpe:2.3:a:globex:router:1:*:*:*:*:*:*:*'] })], both, [])
+    expect(attributions).toEqual([])
+    expect(exclusions[0]).toMatchObject({ reason: 'AMBIGUOUS_VENDOR', candidateVendorIds: ['acme', 'globex'] })
+  })
+  it('keeps the assigner rule when the structured data names the assigner or no registered vendor', () => {
+    expect(attributeCves([assigned({ affected: [{ vendor: 'Acme', product: 'x' }] })], both, []).attributions[0]!.vendorId).toBe('acme')
+    expect(attributeCves([assigned({ affected: [{ vendor: 'Nobody', product: 'x' }] })], both, []).attributions[0]!.vendorId).toBe('acme')
+    expect(attributeCves([assigned({ affected: [{ vendor: 'Acme', product: 'x' }, { vendor: 'Globex', product: 'y' }] })], both, []).attributions[0]!.vendorId).toBe('acme')
+  })
+})

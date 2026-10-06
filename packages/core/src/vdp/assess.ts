@@ -44,10 +44,22 @@ export type VdpRule = {
   effect: 'MET' | 'PARTIAL' | 'CONTRADICTED'
   precedence: number
   description: string
-  /** Every group must have at least one phrase present in the sentence. */
+  /** Every group must have at least one phrase present in the sentence (word-start match). */
   allOf: string[][]
-  /** The rule does not fire on a sentence containing any of these. */
+  /** The rule does not fire on a sentence containing any of these (word-start match). No finding. */
   noneOf: string[]
+  /**
+   * Negation markers, matched anywhere (also inside words: "not " in "cannot ", "n't" in "isn't")
+   * within the clause that holds the rule's anchor (its first-group match). A negated MET/PARTIAL
+   * rule becomes a CONTRADICTED finding for the criterion (rule id + ".NEGATED"), never credit.
+   */
+  negations?: string[]
+  /**
+   * Qualifiers that make a negated clause an ordinary scope or coordination limit ("testing
+   * outside this scope is not authorized", "do not disclose before a fix"): such a clause is
+   * neither credited nor treated as a contradiction.
+   */
+  qualifiers?: string[]
 }
 
 export const VDP_CRITERIA: readonly VdpCriterionId[] = [
@@ -64,7 +76,66 @@ export const VDP_CRITERIA: readonly VdpCriterionId[] = [
 /** The four elements the pledge names for Goal 5. */
 export const PLEDGE_VDP_CRITERIA: readonly VdpCriterionId[] = ['REPORTING_CHANNEL', 'TESTING_AUTHORIZED', 'GOOD_FAITH_SAFE_HARBOR', 'PUBLIC_DISCLOSURE_ALLOWED']
 
-const NEGATIONS = ['not ', 'never', 'prohibit', "don't", 'do not', 'must not', 'may not', 'cannot', 'unauthoriz']
+/** Negation markers shared by the permissive rules. Matched as substrings, so "cannot" and "isn't" are caught. */
+export const VDP_NEGATIONS: readonly string[] = [
+  'not ',
+  "n't",
+  'never',
+  'cannot',
+  'can not',
+  'prohibit',
+  'forbid',
+  'no longer',
+  'unauthoriz',
+  'unauthoris',
+  'without our authoriz',
+  'without authoriz',
+  'without prior authoriz',
+  'without our permission',
+  'without permission',
+  'without prior permission',
+  'without written permission',
+  'without our written',
+  'without explicit',
+  'does not apply',
+  'no safe harbo',
+  'no legal safe harbo',
+]
+
+/** A negated clause that also limits scope is an ordinary scope statement, not a refusal. */
+export const VDP_SCOPE_QUALIFIERS: readonly string[] = [
+  'outside',
+  'out of scope',
+  'out-of-scope',
+  'not listed',
+  'other than',
+  'beyond',
+  'not in accordance',
+  'not consistent with',
+  'inconsistent with',
+  'in violation',
+  'violat',
+  'do not follow',
+  "don't follow",
+  'not comply',
+  'fail to comply',
+  'not covered',
+  'excluded',
+  'third-party',
+  'third party',
+  'not owned',
+]
+
+/** A negated disclosure clause that sets a coordination window is coordinated disclosure, not a ban. */
+export const VDP_COORDINATION_QUALIFIERS: readonly string[] = ['until', 'before', 'prior to', 'after', ' once', 'within', ' days', 'coordinat', 'unless']
+
+/** Legal action conditioned on NOT following the policy is compatible with the pledge commitment. */
+export const VDP_LEGAL_CONDITION_EXCLUSIONS: readonly string[] = [
+  'will not pursue', 'will not take', 'will not initiate', "won't pursue", "won't take", 'not to pursue',
+  'do not follow', "don't follow", 'not comply', 'fail to comply', 'failure to comply', 'violat', 'outside this policy',
+  'outside the scope', 'outside of this policy', 'not in accordance', 'not consistent with', 'inconsistent with', 'breach',
+  'not acting in good faith', 'bad faith',
+]
 
 export const VDP_RULES: readonly VdpRule[] = [
   // ---------------------------------------------------------------- reporting channel
@@ -99,7 +170,12 @@ export const VDP_RULES: readonly VdpRule[] = [
     effect: 'CONTRADICTED',
     precedence: 100,
     description: 'The policy prohibits testing outright.',
-    allOf: [['do not test', 'must not test', 'may not test', 'not permitted to test', 'testing is prohibited', 'testing is not permitted', 'testing is not authorized', 'not authorized to test', 'prohibits testing', 'prohibit testing', 'prohibits any testing', 'no testing']],
+    allOf: [
+      [
+        'do not test', 'must not test', 'may not test', 'not permitted to test', 'testing is prohibited', 'testing is not permitted', 'testing is not authorized',
+        'not authorized to test', 'prohibits testing', 'prohibit testing', 'prohibits any testing', 'no testing', 'testing is forbidden', 'forbids testing',
+      ],
+    ],
     noneOf: [],
   },
   {
@@ -113,7 +189,9 @@ export const VDP_RULES: readonly VdpRule[] = [
       ['test', 'security research', 'vulnerability research', 'research activit', 'good faith research', 'good-faith research'],
       ['only', 'limited to', 'restricted to', 'solely', 'exclusively'],
     ],
-    noneOf: ['not authoriz', 'not permit', 'not allowed', 'not limited to', 'prohibit'],
+    noneOf: ['not limited to'],
+    negations: [...VDP_NEGATIONS],
+    qualifiers: [...VDP_SCOPE_QUALIFIERS],
   },
   {
     id: 'VDP.TESTING.R1',
@@ -125,7 +203,9 @@ export const VDP_RULES: readonly VdpRule[] = [
       ['authoriz', 'authoris', 'permit', 'allowed', 'may test', 'may conduct', 'welcome', 'invite', 'encourage'],
       ['test', 'security research', 'vulnerability research', 'research activit', 'good faith research', 'good-faith research'],
     ],
-    noneOf: NEGATIONS,
+    noneOf: [],
+    negations: [...VDP_NEGATIONS],
+    qualifiers: [...VDP_SCOPE_QUALIFIERS],
   },
   // ---------------------------------------------------------------- safe harbor
   {
@@ -133,16 +213,17 @@ export const VDP_RULES: readonly VdpRule[] = [
     criterion: 'GOOD_FAITH_SAFE_HARBOR',
     effect: 'CONTRADICTED',
     precedence: 100,
-    description: 'The policy reserves or threatens legal action against researchers.',
+    description: 'The policy reserves or threatens legal action against researchers. Legal action conditioned on not following the policy is not a contradiction.',
     allOf: [
       [
         'reserve the right to pursue legal', 'reserves the right to pursue legal', 'reserve the right to take legal', 'reserves the right to take legal',
         'reserve the right to initiate legal', 'reserves the right to initiate legal', 'reserve all legal', 'reserves all legal', 'may pursue legal action',
         'may take legal action', 'may initiate legal action', 'will pursue legal action', 'will take legal action', 'may result in legal action',
         'will result in legal action', 'may be prosecuted', 'will be prosecuted', 'referred to law enforcement', 'criminal prosecution',
+        'hesitate to pursue legal', 'hesitate to take legal',
       ],
     ],
-    noneOf: ['will not', "won't", 'not pursue', 'not take', 'not initiate'],
+    noneOf: [...VDP_LEGAL_CONDITION_EXCLUSIONS],
   },
   {
     id: 'VDP.SAFE_HARBOR.R1',
@@ -159,6 +240,9 @@ export const VDP_RULES: readonly VdpRule[] = [
       ],
     ],
     noneOf: [],
+    // These phrases are negative in form ("will not pursue"); only a negation of the authorization itself counts.
+    negations: ['not considered', 'not be considered', "n't considered", 'never considered', 'no longer considered', 'not deem'],
+    qualifiers: [...VDP_SCOPE_QUALIFIERS],
   },
   {
     id: 'VDP.SAFE_HARBOR.R2',
@@ -170,7 +254,9 @@ export const VDP_RULES: readonly VdpRule[] = [
       ['safe harbor', 'safe harbour'],
       ['good faith', 'good-faith', 'legal', 'research', 'comply', 'complian', 'authoriz'],
     ],
-    noneOf: ['no safe harbor', 'no safe harbour', 'does not provide', 'not offer'],
+    noneOf: [],
+    negations: [...VDP_NEGATIONS],
+    qualifiers: [...VDP_SCOPE_QUALIFIERS],
   },
   // ---------------------------------------------------------------- public disclosure
   {
@@ -184,7 +270,7 @@ export const VDP_RULES: readonly VdpRule[] = [
         'must not disclose', 'may not disclose', 'shall not disclose', 'do not disclose', 'will not disclose', 'not to disclose', 'never disclose',
         'must not publish', 'may not publish', 'shall not publish', 'do not publish', 'not publicly disclose', 'not permitted to disclose',
         'not permitted to publish', 'prohibited from disclos', 'prohibited from publish', 'public disclosure is prohibited',
-        'public disclosure is not permitted', 'keep confidential', 'remain confidential', 'confidential indefinitely',
+        'public disclosure is not permitted', 'public disclosure is forbidden', 'keep confidential', 'remain confidential', 'confidential indefinitely',
       ],
     ],
     noneOf: ['until', 'unless', 'prior to', 'before', 'without coordinat', 'without first', 'within', 'after', 'once'],
@@ -202,7 +288,9 @@ export const VDP_RULES: readonly VdpRule[] = [
         'may publish', 'may disclose', 'free to disclose', 'free to publish',
       ],
     ],
-    noneOf: NEGATIONS,
+    noneOf: [],
+    negations: [...VDP_NEGATIONS],
+    qualifiers: [...VDP_COORDINATION_QUALIFIERS],
   },
   {
     id: 'VDP.DISCLOSURE.R2',
@@ -214,7 +302,7 @@ export const VDP_RULES: readonly VdpRule[] = [
       ['disclos', 'publish'],
       ['until', 'after', 'before', 'once', 'days', 'prior to', 'when a fix', 'coordinat'],
     ],
-    noneOf: ['never', 'indefinitely', 'without our written', 'without written', 'without prior written', 'not permitted', 'prohibit'],
+    noneOf: ['never', 'indefinitely', 'without our written', 'without written', 'without prior written', 'not permitted', 'prohibit', 'forbid', "aren't permitted", 'not allowed'],
   },
   // ---------------------------------------------------------------- scope
   {
@@ -255,6 +343,25 @@ export const VDP_RULES: readonly VdpRule[] = [
   },
 ]
 
+/** Text that marks a short page as a JavaScript shell or interstitial rather than a policy. */
+export const VDP_INTERSTITIAL_MARKERS: readonly string[] = [
+  'enable javascript',
+  'javascript is required',
+  'javascript must be enabled',
+  'requires javascript',
+  'turn on javascript',
+  'javascript is disabled',
+  'loading...',
+  `loading${String.fromCodePoint(0x2026)}`,
+  'please wait',
+  'checking your browser',
+  'just a moment',
+  'verify you are human',
+  'are you a robot',
+  'access denied',
+  'captcha',
+]
+
 /** Rules that do not read policy text. */
 export const VDP_STRUCTURAL_RULES: readonly { id: string; criterion: VdpCriterionId; state: CriterionState; description: string }[] = [
   { id: 'VDP.DISCOVERABLE.STXT', criterion: 'POLICY_DISCOVERABLE', state: 'MET', description: 'A policy was read from the URL in the security.txt Policy field.' },
@@ -273,6 +380,9 @@ export const VDP_STRUCTURAL_RULES: readonly { id: string; criterion: VdpCriterio
   { id: 'VDP.CURRENT.EXPIRED', criterion: 'CURRENT', state: 'NOT_MET', description: 'security.txt Expires has passed and the policy states no recent update.' },
   { id: 'VDP.CURRENT.EXPIRED_POLICY_RECENT', criterion: 'CURRENT', state: 'PARTIAL', description: 'security.txt Expires has passed, but the policy states a recent update.' },
   { id: 'VDP.CURRENT.POLICY_OLD', criterion: 'CURRENT', state: 'NOT_MET', description: 'No valid security.txt, and the policy’s stated update is older than the window.' },
+  { id: 'VDP.CURRENT.STXT_CONTRADICTORY', criterion: 'CURRENT', state: 'UNKNOWN', description: 'security.txt states several different Expires dates and the policy states no recent update.' },
+  { id: 'VDP.CURRENT.FUTURE_DATE', criterion: 'CURRENT', state: 'UNKNOWN', description: 'The policy states a last-updated date after asOf: implausible, not counted.' },
+  { id: 'VDP.*.NEGATED', criterion: 'TESTING_AUTHORIZED', state: 'CONTRADICTED', description: 'A permissive rule matched in a negated clause (e.g. "testing is never permitted"): recorded as prohibitive language (applies to every rule with negations).' },
   { id: 'VDP.CURRENT.NONE', criterion: 'CURRENT', state: 'NOT_MET', description: 'Neither security.txt nor a policy exists (both sources were read).' },
   { id: 'VDP.CURRENT.UNDATED', criterion: 'CURRENT', state: 'UNKNOWN', description: 'No security.txt Expires and no stated policy date: currency cannot be determined.' },
 ]
@@ -347,8 +457,26 @@ function quoteOf(sentence: string, at: number): string {
   return (start > 0 ? '…' : '') + body + (start + MAX_QUOTE - 2 < sentence.length ? '…' : '')
 }
 
-function ruleMatch(rule: VdpRule, norm: string): number {
-  for (const n of rule.noneOf) if (findPhrase(norm, n) >= 0) return -1
+/** Clause boundaries used to scope a negation to the words around a rule's anchor. */
+const CLAUSE_BREAKS = [',', ';', ':', '(', ')', ' but ', ' and ', ' or ', ' however', ' whereas ', ' while ', ' although ', ' except ']
+
+/** The clause of `s` that contains index `at`. Linear in the sentence length per break marker. */
+export function clauseAround(s: string, at: number): string {
+  let start = 0
+  let end = s.length
+  for (const b of CLAUSE_BREAKS) {
+    const before = at > 0 ? s.lastIndexOf(b, at - 1) : -1
+    if (before >= 0 && before + b.length <= at && before + b.length > start) start = before + b.length
+    const after = s.indexOf(b, at + 1)
+    if (after >= 0 && after < end) end = after
+  }
+  return s.slice(start, end)
+}
+
+type RuleMatch = { at: number; negated: boolean }
+
+function ruleMatch(rule: VdpRule, norm: string): RuleMatch | null {
+  for (const n of rule.noneOf) if (findPhrase(norm, n) >= 0) return null
   let first = -1
   for (const group of rule.allOf) {
     let hit = -1
@@ -356,10 +484,17 @@ function ruleMatch(rule: VdpRule, norm: string): number {
       const i = findPhrase(norm, p)
       if (i >= 0 && (hit < 0 || i < hit)) hit = i
     }
-    if (hit < 0) return -1
+    if (hit < 0) return null
     if (first < 0) first = hit
   }
-  return first
+  if (rule.negations && rule.negations.length > 0 && rule.effect !== 'CONTRADICTED') {
+    const clause = ` ${clauseAround(norm, first)} `
+    if (rule.negations.some((n) => clause.includes(n))) {
+      if (rule.qualifiers?.some((q) => clause.includes(q))) return null
+      return { at: first, negated: true }
+    }
+  }
+  return { at: first, negated: false }
 }
 
 const MONTHS = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december']
@@ -427,40 +562,72 @@ function hostOf(url: string | undefined): string | undefined {
   }
 }
 
+/** A security.txt Contact credited as a contact: mailto:, https:, http: or tel: with a value. */
+export function isCreditableContact(c: string): boolean {
+  return /^(?:mailto:[^\s@]+@[^\s@]+|https?:\/\/\S+|tel:\+?[0-9][0-9 ()-]{3,})$/i.test(c.trim())
+}
+
+/** How the policy text was obtained, per VdpObservation.policy.retrieval. */
+export function policyRetrieval(policy: Input['policy'], text: string, params: MethodologyParameters): VdpObservation['policy']['retrieval'] {
+  if (policy.fetchFailed) return 'FETCH_FAILED'
+  if (!policy.found) return 'NOT_FOUND'
+  const words = countWords(text)
+  if (words < 3) return 'UNREADABLE'
+  if (words < params.vdpMinimumPolicyWords) {
+    const lower = normalizeSentence(text)
+    if (VDP_INTERSTITIAL_MARKERS.some((m) => lower.includes(m))) return 'UNREADABLE'
+    return 'TOO_SHORT'
+  }
+  return 'READ'
+}
+
+function countWords(text: string): number {
+  return text.split(/\s+/).filter((w) => w.length > 0).length
+}
+
+type Hit = { ruleId: string; effect: CriterionState; precedence: number; quotes: string[]; contradictsSupport: boolean }
+
 export function assessVdp(input: Input): VdpObservation {
   const { securityTxt: stxt, policy, params } = input
   const text = policy.text === undefined ? '' : cleanText(policy.text).replace(/[ \t\f\v\r]+/g, ' ').replace(/ ?\n ?/g, '\n').trim()
-  const readable = policy.found && !policy.fetchFailed && text.length > 0
-  const unreadable = (policy.found && !readable) || (!policy.found && policy.fetchFailed === true)
+  const retrieval = policyRetrieval(policy, text, params)
+  const readable = retrieval === 'READ' || retrieval === 'TOO_SHORT'
+  const unreadable = retrieval === 'UNREADABLE' || retrieval === 'FETCH_FAILED'
+  const contacts = stxt.present ? stxt.contacts.filter(isCreditableContact) : []
 
   const sentences = readable ? splitSentences(text) : []
   const normalized = sentences.map(normalizeSentence)
 
-  // Evaluate every text rule over every sentence.
-  const hits = new Map<VdpCriterionId, { rule: VdpRule; quotes: string[] }[]>()
+  // Evaluate every text rule over every sentence. A negated permissive rule is a contradiction.
+  const hits = new Map<VdpCriterionId, Hit[]>()
   const prohibitive: ProhibitiveFinding[] = []
-  for (const rule of VDP_RULES) {
-    const quotes: string[] = []
-    for (let k = 0; k < normalized.length; k++) {
-      const at = ruleMatch(rule, normalized[k]!)
-      if (at < 0) continue
-      const q = quoteOf(sentences[k]!, at)
-      if (!quotes.includes(q)) quotes.push(q)
-      if (rule.effect === 'CONTRADICTED' && prohibitive.length < 20 && !prohibitive.some((p) => p.ruleId === rule.id && p.quote === q)) {
-        prohibitive.push({ ruleId: rule.id, quote: q, againstCriterion: rule.criterion })
-      }
+  const addHit = (criterion: VdpCriterionId, h: Omit<Hit, 'quotes'>, quote: string) => {
+    const list = hits.get(criterion) ?? []
+    let entry = list.find((x) => x.ruleId === h.ruleId)
+    if (!entry) {
+      entry = { ...h, quotes: [] }
+      list.push(entry)
+      hits.set(criterion, list)
     }
-    if (quotes.length > 0) {
-      const list = hits.get(rule.criterion) ?? []
-      list.push({ rule, quotes })
-      hits.set(rule.criterion, list)
+    if (!entry.quotes.includes(quote)) entry.quotes.push(quote)
+    if (h.effect === 'CONTRADICTED' && prohibitive.length < 20 && !prohibitive.some((p) => p.againstCriterion === criterion && p.quote === quote)) {
+      prohibitive.push({ ruleId: h.ruleId, quote, againstCriterion: criterion })
+    }
+  }
+  for (const rule of VDP_RULES) {
+    for (let k = 0; k < normalized.length; k++) {
+      const m = ruleMatch(rule, normalized[k]!)
+      if (!m) continue
+      const q = quoteOf(sentences[k]!, m.at)
+      if (m.negated) addHit(rule.criterion, { ruleId: `${rule.id}.NEGATED`, effect: 'CONTRADICTED', precedence: 100, contradictsSupport: false }, q)
+      else addHit(rule.criterion, { ruleId: rule.id, effect: rule.effect, precedence: rule.precedence, contradictsSupport: false }, q)
     }
   }
 
   const best = (criterion: VdpCriterionId) => {
     const list = hits.get(criterion)
     if (!list || list.length === 0) return undefined
-    return [...list].sort((a, b) => b.rule.precedence - a.rule.precedence)[0]
+    return [...list].sort((a, b) => b.precedence - a.precedence)[0]
   }
 
   const results = new Map<VdpCriterionId, CriterionResult>()
@@ -469,47 +636,53 @@ export function assessVdp(input: Input): VdpObservation {
     if (note) r.note = note
     results.set(criterion, r)
   }
+  const wordCount = text.length > 0 ? countWords(text) : 0
+  const unreadableNote =
+    retrieval === 'FETCH_FAILED' ? 'The policy fetch failed; its content is unknown.' : 'The page had no readable policy text (empty, a JavaScript shell or an interstitial).'
 
   // POLICY_DISCOVERABLE
   const policyHost = policy.host ?? hostOf(policy.url)
   if (readable) {
     const viaStxt = policy.url !== undefined && stxt.policyUrls.includes(policy.url)
-    set('POLICY_DISCOVERABLE', 'MET', viaStxt ? 'VDP.DISCOVERABLE.STXT' : 'VDP.DISCOVERABLE.KNOWN', [viaStxt ? `Policy: ${policy.url}` : `Policy read from ${policy.url ?? policyHost ?? 'the registered URL'}`])
+    set(
+      'POLICY_DISCOVERABLE',
+      'MET',
+      viaStxt ? 'VDP.DISCOVERABLE.STXT' : 'VDP.DISCOVERABLE.KNOWN',
+      [viaStxt ? `Policy: ${policy.url}` : `Policy read from ${policy.url ?? policyHost ?? 'the registered URL'}`],
+      retrieval === 'TOO_SHORT' ? `Only ${wordCount} words were extracted (plausibility floor ${params.vdpMinimumPolicyWords}).` : undefined,
+    )
   } else if (unreadable) {
-    set('POLICY_DISCOVERABLE', 'UNKNOWN', 'VDP.DISCOVERABLE.UNREADABLE', policy.url ? [`Policy URL: ${policy.url}`] : [], policy.fetchFailed ? 'The policy fetch failed; the policy may exist.' : 'The policy page had no readable text.')
+    set('POLICY_DISCOVERABLE', 'UNKNOWN', 'VDP.DISCOVERABLE.UNREADABLE', policy.url ? [`Policy URL: ${policy.url}`] : [], unreadableNote)
   } else {
     set('POLICY_DISCOVERABLE', 'NOT_MET', 'VDP.DISCOVERABLE.NONE', [], 'No policy was found in security.txt, the registry, or on the vendor domain.')
   }
 
-  // SECURITY_CONTACT
+  // SECURITY_CONTACT (a security.txt Contact stands on its own, even when the policy is unreadable)
   const contactHit = best('SECURITY_CONTACT')
-  if (stxt.present && stxt.contacts.length > 0) {
-    set('SECURITY_CONTACT', 'MET', 'VDP.CONTACT.STXT', stxt.contacts.slice(0, 2).map((c) => `Contact: ${c}`))
-  } else if (contactHit) {
-    set('SECURITY_CONTACT', 'MET', contactHit.rule.id, contactHit.quotes)
+  if (contacts.length > 0) {
+    set('SECURITY_CONTACT', 'MET', 'VDP.CONTACT.STXT', contacts.slice(0, 2).map((c) => `Contact: ${c}`))
+  } else if (readable && contactHit && contactHit.effect === 'MET') {
+    set('SECURITY_CONTACT', 'MET', contactHit.ruleId, contactHit.quotes)
   } else if (unreadable) {
-    set('SECURITY_CONTACT', 'UNKNOWN', 'VDP.CONTACT.UNKNOWN', [], 'No security.txt Contact; the policy could not be read.')
+    set('SECURITY_CONTACT', 'UNKNOWN', 'VDP.CONTACT.UNKNOWN', [], `No usable security.txt Contact; ${unreadableNote.charAt(0).toLowerCase()}${unreadableNote.slice(1)}`)
   } else {
-    set('SECURITY_CONTACT', 'NOT_MET', 'VDP.CONTACT.NONE', [])
+    set('SECURITY_CONTACT', 'NOT_MET', 'VDP.CONTACT.NONE', [], stxt.present && stxt.contacts.length > contacts.length ? 'security.txt lists a Contact that is not a usable URI (placeholder).' : undefined)
   }
 
-  // Text criteria.
+  // Text criteria. When the policy could not be read, every one of them is UNKNOWN.
   const textCriteria: VdpCriterionId[] = ['REPORTING_CHANNEL', 'TESTING_AUTHORIZED', 'GOOD_FAITH_SAFE_HARBOR', 'PUBLIC_DISCLOSURE_ALLOWED', 'SCOPE_DEFINED']
   for (const criterion of textCriteria) {
     const hit = best(criterion)
-    const stxtContact = criterion === 'REPORTING_CHANNEL' && stxt.present && stxt.contacts.length > 0
     if (readable && hit) {
-      const note =
-        hit.rule.effect === 'CONTRADICTED' && (hits.get(criterion) ?? []).some((h) => h.rule.effect !== 'CONTRADICTED')
-          ? 'The policy also contains supporting language; prohibitive language takes precedence.'
-          : undefined
-      set(criterion, hit.rule.effect, hit.rule.id, hit.quotes, note)
-    } else if (stxtContact) {
-      set(criterion, 'PARTIAL', 'VDP.REPORTING.STXT_ONLY', stxt.contacts.slice(0, 2).map((c) => `Contact: ${c}`), readable ? 'The policy does not describe a reporting channel; security.txt lists a contact.' : 'No readable policy; security.txt lists a contact.')
+      const supporting = (hits.get(criterion) ?? []).some((h) => h.effect !== 'CONTRADICTED')
+      const note = hit.effect === 'CONTRADICTED' && supporting ? 'The policy also contains supporting language; prohibitive language takes precedence.' : undefined
+      set(criterion, hit.effect, hit.ruleId, hit.quotes, note)
+    } else if (unreadable) {
+      set(criterion, 'UNKNOWN', 'VDP.POLICY_UNREADABLE', [], unreadableNote)
+    } else if (criterion === 'REPORTING_CHANNEL' && contacts.length > 0) {
+      set(criterion, 'PARTIAL', 'VDP.REPORTING.STXT_ONLY', contacts.slice(0, 2).map((c) => `Contact: ${c}`), readable ? 'The policy does not describe a reporting channel; security.txt lists a contact.' : 'No policy exists; security.txt lists a contact.')
     } else if (readable) {
       set(criterion, 'NOT_MET', 'VDP.NO_MATCH', [], 'The policy was read; no rule for this criterion matched.')
-    } else if (unreadable) {
-      set(criterion, 'UNKNOWN', 'VDP.POLICY_UNREADABLE', [], policy.fetchFailed ? 'The policy fetch failed.' : 'The policy page had no readable text.')
     } else {
       set(criterion, 'NOT_MET', 'VDP.NO_POLICY', [], 'No policy was found.')
     }
@@ -521,7 +694,10 @@ export function assessVdp(input: Input): VdpObservation {
   const expT = stxt.present && stxt.expires ? Date.parse(stxt.expires) : NaN
   const stxtValid = !Number.isNaN(expT) && expT >= asOfT
   const stxtExpired = !Number.isNaN(expT) && expT < asOfT
-  const policyAgeDays = statedLastUpdated ? (asOfT - Date.parse(statedLastUpdated)) / 86_400_000 : NaN
+  const contradictoryExpires = stxt.warnings.some((w) => w.startsWith('CONTRADICTORY_EXPIRES'))
+  const statedT = statedLastUpdated ? Date.parse(statedLastUpdated) : NaN
+  const futureDate = !Number.isNaN(statedT) && statedT > asOfT
+  const policyAgeDays = !Number.isNaN(statedT) && !futureDate ? (asOfT - statedT) / 86_400_000 : NaN
   const policyRecent = !Number.isNaN(policyAgeDays) && policyAgeDays <= params.vdpCurrentWithinDays
   const policyOld = !Number.isNaN(policyAgeDays) && policyAgeDays > params.vdpCurrentWithinDays
   const expQuote = stxt.expires ? [`Expires: ${stxt.expires}`] : []
@@ -533,21 +709,23 @@ export function assessVdp(input: Input): VdpObservation {
     set('CURRENT', 'MET', 'VDP.CURRENT.STXT', expQuote)
   } else if (policyRecent) {
     set('CURRENT', 'MET', 'VDP.CURRENT.POLICY_DATE', dateQuote)
+  } else if (contradictoryExpires) {
+    set('CURRENT', 'UNKNOWN', 'VDP.CURRENT.STXT_CONTRADICTORY', [], 'security.txt states more than one different Expires date; its currency cannot be determined.')
+  } else if (futureDate) {
+    set('CURRENT', 'UNKNOWN', 'VDP.CURRENT.FUTURE_DATE', dateQuote, `The policy states a last-updated date after ${input.asOf}; the date is implausible and not counted.`)
   } else if (policyOld) {
     set('CURRENT', 'NOT_MET', 'VDP.CURRENT.POLICY_OLD', dateQuote, `The policy's stated update is more than ${params.vdpCurrentWithinDays} days before ${input.asOf}.`)
-  } else if (!stxt.present && !policy.found && !unreadable && !stxt.warnings.some((w) => w.startsWith('FETCH_FAILED'))) {
+  } else if (!stxt.present && retrieval === 'NOT_FOUND' && !stxt.warnings.some((w) => w.startsWith('FETCH_FAILED'))) {
     set('CURRENT', 'NOT_MET', 'VDP.CURRENT.NONE', [], 'Neither a security.txt file nor a policy exists, so nothing is kept current.')
   } else {
     set('CURRENT', 'UNKNOWN', 'VDP.CURRENT.UNDATED', [], 'No security.txt Expires and no stated policy date.')
   }
 
-  const obsPolicy: VdpObservation['policy'] = { found: policy.found }
+  const obsPolicy: VdpObservation['policy'] = { found: policy.found, retrieval }
   if (policy.url) obsPolicy.url = policy.url
   if (policy.snapshotId) obsPolicy.snapshotId = policy.snapshotId
-  if (readable) {
-    obsPolicy.textHash = sha256Text(text)
-    obsPolicy.wordCount = text.split(/\s+/).filter((w) => w.length > 0).length
-  }
+  if (readable) obsPolicy.textHash = sha256Text(text)
+  if (text.length > 0) obsPolicy.wordCount = wordCount
   if (statedLastUpdated) obsPolicy.statedLastUpdated = statedLastUpdated
   if (policyHost) obsPolicy.host = policyHost
 

@@ -6,7 +6,7 @@
  * and an Expires: date for the CURRENT criterion. Every deviation from the
  * RFC is kept as a warning with a stable code prefix:
  *
- *   NO_CONTACT, NO_EXPIRES, MULTIPLE_EXPIRES, INVALID_EXPIRES, EXPIRED,
+ *   NO_CONTACT, NO_EXPIRES, MULTIPLE_EXPIRES, CONTRADICTORY_EXPIRES, INVALID_EXPIRES, EXPIRED,
  *   EXPIRES_TOO_FAR, INSECURE_URI, BAD_CONTACT_URI, UNKNOWN_FIELD,
  *   MALFORMED_LINE, CANONICAL_MISMATCH, TRUNCATED, EMPTY
  */
@@ -100,8 +100,12 @@ export function parseSecurityTxt(text: string, ctx: { url: string; snapshotId: s
     }
     switch (name) {
       case 'contact':
-        if (!isUri(value)) warn(`BAD_CONTACT_URI: Contact "${value.slice(0, 80)}" is not a URI (mailto:, https: or tel:).`)
-        else if (/^http:/i.test(value)) warn(`INSECURE_URI: Contact "${value.slice(0, 80)}" uses http.`)
+        // A placeholder ("none", "n/a") or any non-URI value is not a contact: warned, not stored.
+        if (!isUri(value)) {
+          warn(`BAD_CONTACT_URI: Contact "${value.slice(0, 80)}" is not a URI (mailto:, https: or tel:); not used as a contact.`)
+          break
+        }
+        if (/^http:/i.test(value)) warn(`INSECURE_URI: Contact "${value.slice(0, 80)}" uses http.`)
         if (result.contacts.length < MAX_VALUES) result.contacts.push(value)
         break
       case 'policy':
@@ -126,8 +130,11 @@ export function parseSecurityTxt(text: string, ctx: { url: string; snapshotId: s
 
   if (result.contacts.length === 0) warn('NO_CONTACT: the required Contact field is missing.')
   if (expires.length === 0) warn('NO_EXPIRES: the required Expires field is missing.')
-  if (expires.length > 1) warn(`MULTIPLE_EXPIRES: Expires appears ${expires.length} times; the first is used.`)
-  const exp = expires[0]
+  const distinctExpires = [...new Set(expires.map((e) => (RFC3339.test(e) && !Number.isNaN(Date.parse(e)) ? new Date(Date.parse(e)).toISOString() : e)))]
+  const contradictory = distinctExpires.length > 1
+  if (expires.length > 1) warn(`MULTIPLE_EXPIRES: Expires appears ${expires.length} times (RFC 9116 allows one).`)
+  if (contradictory) warn(`CONTRADICTORY_EXPIRES: ${distinctExpires.length} different Expires values (${distinctExpires.slice(0, 3).join(', ')}); none is used.`)
+  const exp = contradictory ? undefined : expires[0]
   if (exp !== undefined) {
     const t = RFC3339.test(exp) ? Date.parse(exp) : NaN
     if (Number.isNaN(t)) {
