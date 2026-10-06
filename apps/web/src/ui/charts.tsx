@@ -32,8 +32,10 @@ export function CountUp({ value, digits = 0, suffix = '', className }: { value: 
   }, [value, inView, reduce])
   const display = value === null ? NOT_MEASURED : `${(reduce ? value : (shown ?? 0)).toFixed(digits)}${suffix}`
   return (
-    <span ref={ref} className={cx('ts-num', className)} aria-label={value === null ? 'not measured' : `${value.toFixed(digits)}${suffix}`}>
+    // The animated digits are hidden from assistive technology; the final value is read once.
+    <span ref={ref} className={cx('ts-num', className)}>
       <span aria-hidden="true">{display}</span>
+      <span className="sr-only">{value === null ? 'not measured' : `${value.toFixed(digits)}${suffix}`}</span>
     </span>
   )
 }
@@ -215,8 +217,9 @@ export function Histogram({
               transition={{ duration: 0.7, ease: EASE, delay: i * 0.04 }}
             />
           </div>
-          <span className="ts-num w-10 text-right text-ink" aria-label={`${b.count} ${unit}`}>
+          <span className="ts-num w-10 text-right text-ink">
             {b.count}
+            <span className="sr-only"> {unit}</span>
           </span>
         </li>
       ))}

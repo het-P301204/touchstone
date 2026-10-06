@@ -123,8 +123,9 @@ export function Landing() {
             <p className="ts-eyebrow mb-4">The problem</p>
             <h2 id="problem-title" className="text-display text-ink">
               <span className="block">Signature</span>
-              <span className="block text-vermilion" aria-label="is not">
-                ≠
+              <span className="block text-vermilion">
+                <span aria-hidden="true">≠</span>
+                <span className="sr-only">is not</span>
               </span>
               <span className="block">verification.</span>
             </h2>

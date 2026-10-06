@@ -104,10 +104,11 @@ export function EvidenceOverview({ summary, v, runId }: { summary: RunSummary; v
         <dl className="grid gap-px overflow-hidden rounded-card bg-line sm:grid-cols-2">
           {scorecard.map((s) => (
             <div key={s.label} className="min-w-0 bg-surface p-4">
-              <div className="flex items-start justify-between gap-2">
-                <dt className="ts-eyebrow">{s.label}</dt>
+              {/* dt must be a direct child of the dl's div group, so the trigger sits inside it. */}
+              <dt className="flex items-start justify-between gap-2">
+                <span className="ts-eyebrow">{s.label}</span>
                 {s.metric && <HowCalculated vendorId={v.vendor.id} runId={runId} goalId={s.metric.goalId} metricId={s.metric.metricId} iconOnly />}
-              </div>
+              </dt>
               <dd className="mt-2">
                 <span className={cx('block leading-none text-ink', /^\d/.test(s.value) ? 'ts-num text-[1.65rem] font-medium' : s.value.startsWith('Not ') ? 'text-[1rem] font-semibold text-ink-2' : 'text-[1.3rem] font-bold tracking-tight')}>{s.value}</span>
                 <span className="ts-ident mt-2 block font-mono text-[0.72rem] leading-snug text-ink-3">{s.sub}</span>
