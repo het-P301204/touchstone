@@ -10,8 +10,17 @@
 
 type Rule = { allow: boolean; pattern: string }
 
+/** Paths longer than this are not evaluated: the fetch is treated as disallowed (fail closed). */
+export const ROBOTS_MAX_PATH = 512
+/** Rules beyond this count are ignored. */
+export const ROBOTS_MAX_RULES = 1_000
+/** Total character comparisons allowed per evaluation; exceeding it is treated as disallowed. */
+export const ROBOTS_COMPARISON_BUDGET = 2_000_000
+
+class BudgetExceeded extends Error {}
+
 /** Glob match with "*" and a trailing "$". Iterative, O(n*m) worst case, no recursion. */
-export function robotsPatternMatches(pattern: string, path: string): boolean {
+export function robotsPatternMatches(pattern: string, path: string, budget: { left: number } = { left: Number.POSITIVE_INFINITY }): boolean {
   let p = pattern
   let anchored = false
   if (p.endsWith('$')) {
@@ -23,6 +32,7 @@ export function robotsPatternMatches(pattern: string, path: string): boolean {
   let starP = -1
   let starS = 0
   while (si < path.length) {
+    if (--budget.left < 0) throw new BudgetExceeded()
     if (pi < p.length && p[pi] === '*') {
       starP = pi++
       starS = si
@@ -64,21 +74,31 @@ export function parseRobots(text: string, productToken: string): Rule[] {
     } else if ((key === 'allow' || key === 'disallow') && current) {
       lastWasAgent = false
       if (value.length === 0) continue // "Disallow:" with no value allows everything
-      current.rules.push({ allow: key === 'allow', pattern: value.slice(0, 500) })
+      if (current.rules.length < ROBOTS_MAX_RULES) current.rules.push({ allow: key === 'allow', pattern: value.slice(0, 500) })
     } else {
       lastWasAgent = false
     }
   }
-  const mine = groups.filter((g) => g.agents.some((a) => a !== '*' && token.startsWith(a)))
+  // Our product token must match exactly (case-insensitive); an empty or prefix-only User-agent does not apply.
+  const mine = groups.filter((g) => g.agents.some((a) => a.length > 0 && a !== '*' && a === token))
   const chosen = mine.length > 0 ? mine : groups.filter((g) => g.agents.includes('*'))
-  return chosen.flatMap((g) => g.rules)
+  return chosen.flatMap((g) => g.rules).slice(0, ROBOTS_MAX_RULES)
 }
 
 export function robotsAllows(text: string, path: string, productToken: string): boolean {
   if (path === '/robots.txt') return true
+  if (path.length > ROBOTS_MAX_PATH) return false
   let best: Rule | null = null
+  const budget = { left: ROBOTS_COMPARISON_BUDGET }
   for (const r of parseRobots(text, productToken)) {
-    if (!robotsPatternMatches(r.pattern, path)) continue
+    let hit: boolean
+    try {
+      hit = robotsPatternMatches(r.pattern, path, budget)
+    } catch (err) {
+      if (err instanceof BudgetExceeded) return false
+      throw err
+    }
+    if (!hit) continue
     if (!best || r.pattern.length > best.pattern.length || (r.pattern.length === best.pattern.length && r.allow && !best.allow)) best = r
   }
   return best ? best.allow : true

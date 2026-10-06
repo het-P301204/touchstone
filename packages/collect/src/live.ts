@@ -15,12 +15,13 @@ import type { Advisory, CveRecord, RunInputs, Snapshot, SourceRef, VdpObservatio
 import { CURRENT_METHODOLOGY_VERSION, methodologyVersion } from '../../core/src/methodology/versions.ts'
 import { matchSignatories } from '../../core/src/identity/index.ts'
 import { assessVdp } from '../../core/src/vdp/assess.ts'
+import { CVE_ID_PATTERN } from '../../core/src/normalize/cve.ts'
 import { CISA_SIGNERS_SOURCE, collectSignerList } from './collectors/cisa-signers.ts'
 import { collectCsaf, csafSource } from './collectors/csaf.ts'
 import { CVE_RECORD_SOURCE, collectCveRecord } from './collectors/cve-records.ts'
 import { NVD_MIN_INTERVAL_MS, NVD_SOURCE, enumerateNvdCveIds } from './collectors/nvd-enumerate.ts'
 import { collectSecurityTxt, securityTxtSource } from './collectors/security-txt.ts'
-import { collectVdpPolicy, vdpSource } from './collectors/vdp-policy.ts'
+import { collectVdpPolicy, robotsSource, vdpSource } from './collectors/vdp-policy.ts'
 import type { CollectContext, Fetcher } from './collectors/common.ts'
 import { HostRateLimiter } from './safe-fetch.ts'
 import type { SafeFetchOptions } from './safe-fetch.ts'
@@ -92,49 +93,63 @@ export async function collectLive(opts: CollectLiveOptions): Promise<CollectLive
 
   const windowStart = new Date(Date.parse(asOf) - mv.parameters.cveWindowDays * 86_400_000).toISOString()
   for (const v of vendors) {
-    // security.txt and policy.
-    const stxt = await collectSecurityTxt(ctx, v, asOf)
-    snapshots.push(...stxt.snapshots)
-    sources.push(securityTxtSource(v))
-    const pol = await collectVdpPolicy(ctx, v, stxt.securityTxt)
-    snapshots.push(...pol.snapshots)
-    if (pol.policy.url) sources.push(vdpSource(v, pol.policy.url))
-    if (pol.note) errors.push(`${v.id} policy: ${pol.note}`)
-    const obs = assessVdp({ vendorId: v.id, observedAt: pol.observedAt ?? stxt.observedAt ?? asOf, asOf, securityTxt: stxt.securityTxt, policy: pol.policy, params: mv.parameters })
-    if (pol.carriedFromSnapshotId) obs.carriedFromSnapshotId = pol.carriedFromSnapshotId
-    vdp.push(obs)
-
-    // CSAF.
-    if (v.csafProviderUrl) {
-      sources.push(csafSource(v))
-      const c = await collectCsaf(ctx, v, { maxAdvisories: opts.maxAdvisoriesPerVendor ?? 100 })
-      snapshots.push(...c.snapshots)
-      advisories.push(...c.advisories)
-      errors.push(...c.errors.map((e) => `${v.id} csaf: ${e}`))
-    }
-
-    // CVE ids.
-    const ids = new Set(opts.cveIds?.[v.id] ?? [])
-    if (opts.enumerateNvd) {
-      const orgIds = v.aliases.filter((a) => a.kind === 'CNA_ORG_ID').map((a) => a.value)
-      for (const orgId of orgIds) {
-        if (!sources.includes(NVD_SOURCE)) sources.push(NVD_SOURCE)
-        const e = await enumerateNvdCveIds(nvdCtx, { sourceIdentifier: orgId, from: windowStart, to: asOf })
-        snapshots.push(...e.snapshots)
-        for (const id of e.ids) ids.add(id)
-        errors.push(...e.errors.map((x) => `${v.id} nvd: ${x}`))
+    // Each vendor is isolated: one malformed feed or record is an error entry, not an aborted run.
+    try {
+      // security.txt and policy.
+      const stxt = await collectSecurityTxt(ctx, v, asOf)
+      snapshots.push(...stxt.snapshots)
+      sources.push(securityTxtSource(v))
+      const pol = await collectVdpPolicy(ctx, v, stxt.securityTxt)
+      snapshots.push(...pol.snapshots)
+      if (pol.policy.url) {
+        sources.push(vdpSource(v, pol.policy.url))
+        const host = new URL(pol.policy.url).hostname
+        if (pol.snapshots.some((s) => s.sourceId === robotsSource(host).id)) sources.push(robotsSource(host))
       }
-    }
-    // A cap shrinks the denominator of every CVE metric, so it is never silent.
-    const cap = opts.maxCvesPerVendor ?? 500
-    if (ids.size > cap) {
-      errors.push(`${v.id}: collected ${cap} of ${ids.size} candidate CVE ids (cap reached); CVE metrics describe this sample, not the full window`)
-    }
-    for (const id of [...ids].sort().slice(0, cap)) {
-      const r = await collectCveRecord(ctx, id)
-      snapshots.push(...r.snapshots)
-      if (r.record) cves.push(r.record)
-      else errors.push(`${id}: ${r.error ?? 'unavailable'}`)
+      if (pol.note) errors.push(`${v.id} policy: ${pol.note}`)
+      const obs = assessVdp({ vendorId: v.id, observedAt: pol.observedAt ?? stxt.observedAt ?? asOf, asOf, securityTxt: stxt.securityTxt, policy: pol.policy, params: mv.parameters })
+      if (pol.carriedFromSnapshotId) obs.carriedFromSnapshotId = pol.carriedFromSnapshotId
+      vdp.push(obs)
+
+      // CSAF.
+      if (v.csafProviderUrl) {
+        sources.push(csafSource(v))
+        const c = await collectCsaf(ctx, v, { maxAdvisories: opts.maxAdvisoriesPerVendor ?? 100 })
+        snapshots.push(...c.snapshots)
+        advisories.push(...c.advisories)
+        errors.push(...c.errors.map((e) => `${v.id} csaf: ${e}`))
+      }
+
+      // CVE ids.
+      const ids = new Set(opts.cveIds?.[v.id] ?? [])
+      if (opts.enumerateNvd) {
+        const orgIds = v.aliases.filter((a) => a.kind === 'CNA_ORG_ID').map((a) => a.value)
+        for (const orgId of orgIds) {
+          if (!sources.includes(NVD_SOURCE)) sources.push(NVD_SOURCE)
+          const e = await enumerateNvdCveIds(nvdCtx, { sourceIdentifier: orgId, from: windowStart, to: asOf })
+          snapshots.push(...e.snapshots)
+          for (const id of e.ids) ids.add(id)
+          errors.push(...e.errors.map((x) => `${v.id} nvd: ${x}`))
+        }
+      }
+      // A cap shrinks the denominator of every CVE metric, so it is never silent.
+      const cap = opts.maxCvesPerVendor ?? 500
+      if (ids.size > cap) {
+        errors.push(`${v.id}: collected ${cap} of ${ids.size} candidate CVE ids (cap reached); CVE metrics describe this sample, not the full window`)
+      }
+      // CVE ids referenced by this vendor's advisories are always fetched, even beyond the cap:
+      // an uncollected CVE must never be read as an absent one.
+      const referenced = new Set(advisories.filter((a) => a.vendorId === v.id).flatMap((a) => a.cveIds).filter((id) => CVE_ID_PATTERN.test(id)))
+      const sampled = [...ids].filter((id) => !referenced.has(id)).sort().slice(0, Math.max(0, cap - referenced.size))
+      for (const id of [...new Set([...referenced, ...sampled])].sort()) {
+        const r = await collectCveRecord(ctx, id)
+        snapshots.push(...r.snapshots)
+        if (r.record) cves.push(r.record)
+        else errors.push(`${id}: ${r.error ?? 'unavailable'}`)
+      }
+  
+    } catch (err) {
+      errors.push(`${v.id}: collection stopped for this vendor: ${err instanceof Error ? err.message.slice(0, 300) : String(err)}`)
     }
   }
 

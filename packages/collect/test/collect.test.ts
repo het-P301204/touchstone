@@ -8,7 +8,7 @@ import { SnapshotStore } from '../src/store.ts'
 import { collectLive } from '../src/live.ts'
 import { nvdWindows, nvdUrl } from '../src/collectors/nvd-enumerate.ts'
 import { advisoryPathsFromChangesCsv, advisoryUrlsFromRolie, feedUrlsFromProviderMetadata } from '../src/collectors/csaf.ts'
-import { choosePolicyUrl } from '../src/collectors/vdp-policy.ts'
+import { choosePolicyUrl, selectPolicyUrl } from '../src/collectors/vdp-policy.ts'
 import { cveRecordUrl } from '../src/collectors/cve-records.ts'
 import type { Fetcher } from '../src/collectors/common.ts'
 import type { SafeFetchResult } from '../src/safe-fetch.ts'
@@ -90,8 +90,23 @@ describe('collector helpers', () => {
     const stxt = (urls: string[]) => ({ present: true, contacts: [], policyUrls: urls, canonical: [], warnings: [], signed: false })
     expect(choosePolicyUrl(v, stxt(['https://evil.example/vdp']))).toBe('https://vendor.example/vdp')
     expect(choosePolicyUrl(v, stxt(['http://www.vendor.example/vdp']))).toBe('https://vendor.example/vdp')
-    expect(choosePolicyUrl(v, stxt(['https://hackerone.com/vendor']))).toBe('https://hackerone.com/vendor')
     expect(choosePolicyUrl(v, stxt(['https://www.vendor.example/policy']))).toBe('https://www.vendor.example/policy')
+  })
+  it('credits a shared-platform program only when the registry ties it to the vendor', () => {
+    const stxt = (urls: string[]) => ({ present: true, contacts: [], policyUrls: urls, canonical: [], warnings: [], signed: false })
+    const unconfirmed = { id: 'v', domains: ['vendor.example'], vdpPolicyUrl: 'https://vendor.example/vdp' } as Vendor
+    expect(selectPolicyUrl(unconfirmed, stxt(['https://hackerone.com/vendor']))).toEqual({ url: 'https://vendor.example/vdp', skipped: ['https://hackerone.com/vendor'] })
+    const none = { id: 'v', domains: ['vendor.example'] } as Vendor
+    expect(selectPolicyUrl(none, stxt(['https://hackerone.com/vendor']))).toEqual({ skipped: ['https://hackerone.com/vendor'] })
+    const confirmed = { id: 'v', domains: ['vendor.example'], vdpPolicyUrl: 'https://hackerone.com/vendor' } as Vendor
+    expect(choosePolicyUrl(confirmed, stxt(['https://hackerone.com/vendor/policy_scopes']))).toBe('https://hackerone.com/vendor/policy_scopes')
+    expect(choosePolicyUrl(confirmed, stxt(['https://hackerone.com/vendor-impostor']))).toBe('https://hackerone.com/vendor')
+  })
+  it('robots.txt: only an exact product token or * applies', () => {
+    expect(robotsAllows('User-agent:\nDisallow: /\n', '/vdp', 'TOUCHSTONE')).toBe(true)
+    expect(robotsAllows('User-agent: touch\nDisallow: /\n', '/vdp', 'TOUCHSTONE')).toBe(true)
+    expect(robotsAllows('User-agent: TouchStone\nDisallow: /\n', '/vdp', 'TOUCHSTONE')).toBe(false)
+    expect(robotsAllows('User-agent: *\nAllow: /\n', `/${'a'.repeat(600)}`, 'TOUCHSTONE')).toBe(false) // over-long path fails closed
   })
 })
 

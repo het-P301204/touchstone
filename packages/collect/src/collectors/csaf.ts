@@ -73,6 +73,15 @@ export function advisoryPathsFromChangesCsv(text: string): string[] {
   return rows.sort((a, b) => (a.time < b.time ? 1 : a.time > b.time ? -1 : 0)).map((r) => r.path)
 }
 
+/** Resolve a feed-supplied (vendor-controlled) URL; null when it does not parse. */
+function resolveUrl(u: string, base: string): string | null {
+  try {
+    return new URL(u, base).toString()
+  } catch {
+    return null
+  }
+}
+
 export async function collectCsaf(
   ctx: CollectContext,
   vendor: Vendor,
@@ -100,6 +109,7 @@ export async function collectCsaf(
     }
   }
 
+  if (resolveUrl(vendor.csafProviderUrl, vendor.csafProviderUrl) === null) return { snapshots, advisories, errors: ['CSAF provider-metadata URL does not parse'] }
   const meta = await getJson(vendor.csafProviderUrl)
   if (meta.json === undefined) return { snapshots, advisories, errors }
   const { rolie, directories } = feedUrlsFromProviderMetadata(meta.json)
@@ -107,7 +117,12 @@ export async function collectCsaf(
   for (const feedUrl of rolie) {
     if (docUrls.length >= max) break
     const feed = await getJson(feedUrl)
-    for (const u of advisoryUrlsFromRolie(feed.json)) if (docUrls.length < max) docUrls.push(new URL(u, feedUrl).toString())
+    for (const u of advisoryUrlsFromRolie(feed.json)) {
+      if (docUrls.length >= max) break
+      const resolved = resolveUrl(u, feedUrl)
+      if (resolved) docUrls.push(resolved)
+      else errors.push(`${feedUrl}: unparseable advisory URL ${JSON.stringify(u.slice(0, 120))}`)
+    }
   }
   for (const dir of directories) {
     if (docUrls.length >= max) break
@@ -118,7 +133,12 @@ export async function collectCsaf(
       errors.push(`${base}changes.csv: ${r.error ?? 'not found'}`)
       continue
     }
-    for (const p of advisoryPathsFromChangesCsv(decodeUtf8(r.body))) if (docUrls.length < max) docUrls.push(new URL(p, base).toString())
+    for (const p of advisoryPathsFromChangesCsv(decodeUtf8(r.body))) {
+      if (docUrls.length >= max) break
+      const resolved = resolveUrl(p, base)
+      if (resolved) docUrls.push(resolved)
+      else errors.push(`${base}changes.csv: unparseable advisory path ${JSON.stringify(p.slice(0, 120))}`)
+    }
   }
   for (const url of [...new Set(docUrls)]) {
     const doc = await getJson(url)
