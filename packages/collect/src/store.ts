@@ -118,13 +118,23 @@ export class SnapshotStore {
     const dir = join(this.root, 'extracts')
     mkdirSync(dir, { recursive: true })
     const path = join(dir, `${snapshotIdValue}.txt`)
-    if (!existsSync(path)) writeFileSync(path, text)
+    // Exclusive create: content-addressed, so an existing file already holds this text.
+    try {
+      writeFileSync(path, text, { flag: 'wx' })
+    } catch (e) {
+      if ((e as NodeJS.ErrnoException).code !== 'EEXIST') throw e
+    }
   }
 
   getExtract(snapshotIdValue: string): string | null {
     if (!/^SN-[0-9a-f]{12}$/.test(snapshotIdValue)) return null
     const path = join(this.root, 'extracts', `${snapshotIdValue}.txt`)
-    return existsSync(path) ? readFileSync(path, 'utf8') : null
+    try {
+      return readFileSync(path, 'utf8')
+    } catch (e) {
+      if ((e as NodeJS.ErrnoException).code === 'ENOENT') return null
+      throw e
+    }
   }
 
   private append(s: Snapshot): void {

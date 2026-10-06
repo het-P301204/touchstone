@@ -17,9 +17,9 @@ import {
   VDP_STRUCTURAL_RULES,
 } from '../../packages/core/src/vdp/assess.ts'
 
-/** A table cell: pipes escaped, newlines flattened. */
+/** A table cell: backslashes and pipes escaped, newlines flattened. */
 function cell(s: string): string {
-  return s.replace(/\|/g, '\\|').replace(/\r?\n/g, ' ')
+  return s.replaceAll('\\', '\\\\').replaceAll('|', '\\|').replace(/\r?\n/g, ' ')
 }
 
 /** A phrase in code style. Leading or trailing spaces are significant, so they are shown as a visible middle dot. */

@@ -836,7 +836,7 @@ function scenariosMd(recs: RecSpec[]): string {
     '| Vendor | Category | Scenario | Expected outcome |',
     '|---|---|---|---|',
   ]
-  const cell = (s: string) => s.replace(/\|/g, '\\|')
+  const cell = (s: string) => s.replaceAll('\\', '\\\\').replaceAll('|', '\\|')
   for (const v of VENDORS) {
     const n = recs.filter((r) => r.vendorId === v.id && r.state === 'PUBLISHED').length
     lines.push(`| \`${v.id}\` ${cell(v.name)} | ${v.category} | ${cell(v.scenario)} (${n} records generated) | ${v.expected.map(cell).join('<br>')} |`)
