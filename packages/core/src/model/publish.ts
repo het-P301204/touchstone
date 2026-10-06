@@ -78,7 +78,14 @@ export type RunSummary = {
   cohort: CohortSummary[]
   freshness: SourceFreshness[]
   sources: SourceRef[]
+  /**
+   * Source-level snapshots only: signer list, VDP, security.txt, advisory feeds, and every
+   * snapshot that is not OK (of any kind). Successful per-record CVE snapshots are published
+   * in each VendorDetail.snapshots instead; snapshotCounts gives the full count per sourceId.
+   */
   snapshots: Snapshot[]
+  /** Number of snapshots in the run per sourceId (including per-record snapshots not listed above). */
+  snapshotCounts?: Record<string, number>
   identityConflicts: IdentityConflict[]
   exclusionCount: number
   /** Signatory count as declared by the signer-list source, and as parsed. */
@@ -94,6 +101,8 @@ export type VendorDetail = {
   attributions: Attribution[]
   exclusions: AttributionExclusion[]
   advisories: Advisory[]
+  /** Per-record (CVE_PROGRAM / NVD) snapshots referenced by this vendor's evidence and records, sorted by id. */
+  snapshots?: Snapshot[]
 }
 
 export type HistorySeries = {

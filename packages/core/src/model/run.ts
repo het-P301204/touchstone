@@ -77,6 +77,11 @@ export type RunInputs = {
   sources: SourceRef[]
   /** Earlier runs' per-vendor figures, for historical baselines. */
   history: HistoricalPoint[]
+  /**
+   * Signer-list parse result (declared vs parsed count, warnings), when a
+   * signer-list snapshot was available. Optional: added by the pipeline.
+   */
+  signatoryList?: { declaredCount: number | null; parsedCount: number; snapshotId?: string; warnings: string[] }
 }
 
 export type HistoricalPoint = {
@@ -148,6 +153,8 @@ export type RunOutput = {
   cohort: CohortSummary[]
   sources: SourceRef[]
   snapshots: Snapshot[]
+  /** Signer-list count as declared by the source and as parsed (carried from RunInputs). */
+  signatoryList?: { declaredCount: number | null; parsedCount: number; snapshotId?: string; warnings: string[] }
 }
 
 // ---------------------------------------------------------------- disputes
