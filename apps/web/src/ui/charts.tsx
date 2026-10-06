@@ -63,7 +63,7 @@ export function CoverageRing({
     return { x1: size / 2 + Math.cos(a) * r1, y1: size / 2 + Math.sin(a) * r1, x2: size / 2 + Math.cos(a) * r2, y2: size / 2 + Math.sin(a) * r2, on: i < observed }
   })
   return (
-    <figure className="flex min-w-0 flex-col items-center gap-3">
+    <figure className="flex min-w-0 shrink-0 flex-col items-center gap-3 justify-self-center">
       <div className="relative" style={{ width: size + 16, height: size + 16 }}>
         <svg viewBox={`-8 -8 ${size + 16} ${size + 16}`} width={size + 16} height={size + 16} role="img" aria-label={`${label}: ${observed} of ${total} slots, ${percent.toFixed(0)} percent`}>
           <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgb(var(--paper-3))" strokeWidth={stroke} />

@@ -13,7 +13,7 @@ import { ExtLink, KV } from '../../ui/controls.tsx'
 import { EmptyState } from '../../ui/States.tsx'
 import { FreshnessBadge, StateChip } from '../../ui/StatusBadge.tsx'
 import { DISPUTE_STATUS, GOAL_STATUS, POSITION, TONE_CLASSES } from '../../lib/status.ts'
-import { ALIAS_KIND_LABEL, CATEGORY_LABEL, DISPUTE_REASON_LABEL, defOf, formatMetric, metricOf } from '../../lib/vocab.ts'
+import { ALIAS_KIND_LABEL, CATEGORY_LABEL, DISPUTE_REASON_LABEL, defOf, formatMetric, metricOf, notMeasured } from '../../lib/vocab.ts'
 import { ageLabel, date, dateTime } from '../../lib/format.ts'
 import { cx } from '../../lib/cx.ts'
 import { HowCalculated, isVendorSource } from '../figures.tsx'
@@ -56,11 +56,11 @@ export function Benchmarks({ summary, v }: { summary: RunSummary; v: VendorSumma
               return (
                 <tr key={`${b.metricId}-${b.peerGroup}`}>
                   <td className="min-w-[12rem] text-[0.84rem] font-semibold text-ink">{def?.name ?? b.metricId}</td>
-                  <td className="ts-num text-right text-[0.84rem]">{formatMetric(b.current, def)}</td>
-                  <td className="ts-num text-right text-[0.84rem] text-ink-2">{formatMetric(b.vendorHistoricalMedian, def)}</td>
+                  <td className="ts-num text-right text-[0.84rem]">{b.current === null ? <span className="font-sans text-[0.76rem] text-ink-3">{notMeasured(metricOf(v, b.metricId)?.metric)}</span> : formatMetric(b.current, def)}</td>
+                  <td className="ts-num text-right text-[0.84rem] text-ink-2">{b.vendorHistoricalMedian === null ? <span className="font-sans text-[0.76rem] text-ink-3">no earlier value</span> : formatMetric(b.vendorHistoricalMedian, def)}</td>
                   <td className="text-[0.78rem] text-ink-2">{b.peerGroup === 'ALL_SIGNATORIES' ? 'All signatories' : (CATEGORY_LABEL as Record<string, string>)[b.peerGroup] ?? b.peerGroup}</td>
                   <td className="ts-num text-right text-[0.84rem] text-ink-2">
-                    {formatMetric(b.peerMedian, def)} <span className="text-[0.7rem] text-ink-3">n={b.peerCount}</span>
+                    {b.peerMedian === null ? <span className="font-sans text-[0.76rem] text-ink-3">no peer value</span> : formatMetric(b.peerMedian, def)} <span className="text-[0.7rem] text-ink-3">n={b.peerCount}</span>
                   </td>
                   <td className="min-w-[14rem] text-[0.8rem]">
                     <span className={cx('inline-flex items-center gap-1.5', TONE_CLASSES[pos.tone].text)}>

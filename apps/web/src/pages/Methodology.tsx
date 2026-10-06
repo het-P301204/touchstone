@@ -330,6 +330,8 @@ export function MethodologyPage() {
                     ['VDP current within', `${p.vdpCurrentWithinDays} days`],
                     ['Unusual below percentile', String(p.unusualBelowPercentile)],
                     ['Latency outlier', `× ${p.latencyOutlierFactor} and ≥ ${p.latencyOutlierMinDays} days`],
+                    ...(p.vdpMinimumPolicyWords !== undefined ? ([['Minimum policy words (plausibility floor)', String(p.vdpMinimumPolicyWords)]] as const) : []),
+                    ...(p.minimumHighImpactAdvisories !== undefined ? ([['Minimum high-impact advisories for timeliness', String(p.minimumHighImpactAdvisories)]] as const) : []),
                   ] as const
                 ).map(([k, v]) => (
                   <div key={k} className="rounded-[12px] border border-line bg-surface px-3.5 py-2.5">

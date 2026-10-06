@@ -8,8 +8,8 @@ import type { Advisory, CveRecord, MetricValue, VendorDetail, VendorSummary } fr
 import { Panel } from '../../ui/Panel.tsx'
 import { HBar, StackBar } from '../../ui/charts.tsx'
 import type { StackPart } from '../../ui/charts.tsx'
-import { breakdownLabel, metricOf } from '../../lib/vocab.ts'
-import { NOT_MEASURED, date, days, num, pct } from '../../lib/format.ts'
+import { breakdownLabel, metricOf, notMeasured } from '../../lib/vocab.ts'
+import { date, days, num, pct } from '../../lib/format.ts'
 import { GAP_LABEL } from '../../lib/vocab.ts'
 import { HowCalculated } from '../figures.tsx'
 import type { Tone } from '../../lib/status.ts'
@@ -122,7 +122,7 @@ export function CveQuality({ v, detail, runId, highImpact, tolerance }: { v: Ven
                   className="flex-1"
                   value={m?.value ?? null}
                   label={b.label}
-                  valueLabel={m?.value === null || !m ? <span className="text-ink-3">{m?.gap ? breakdownLabel(m.gap) : NOT_MEASURED}</span> : pct(m.value)}
+                  valueLabel={m?.value === null || !m ? <span className="text-ink-3">{notMeasured(m)}</span> : pct(m.value)}
                   marker={bm?.peerMedian ?? null}
                   markerLabel={bm ? `Peer median ${pct(bm.peerMedian)}` : undefined}
                   tone="sage"
@@ -173,7 +173,7 @@ export function CveQuality({ v, detail, runId, highImpact, tolerance }: { v: Ven
             {timely && <HowCalculated vendorId={v.vendor.id} runId={runId} goalId={goalId} metricId="cve.timely_issuance" iconOnly />}
           </div>
           <p className="ts-num text-[1.8rem] font-medium leading-none text-ink">
-            {timely?.value === null || !timely ? <span className="text-[1rem] text-ink-3">{timely?.gap ? `Not measured: ${breakdownLabel(timely.gap)}` : NOT_MEASURED}</span> : pct(timely.value)}
+            {timely?.value === null || !timely ? <span className="font-sans text-[1.05rem] font-semibold text-ink-2">{notMeasured(timely)}</span> : pct(timely.value)}
           </p>
           {timely?.calculation && <p className="font-mono text-[0.75rem] text-ink-3">{timely.calculation}</p>}
           {timelyParts.length > 0 && <StackBar parts={timelyParts} />}
@@ -194,9 +194,9 @@ export function CveQuality({ v, detail, runId, highImpact, tolerance }: { v: Ven
               ))}
             </div>
           ) : (
-            <p className="text-[0.84rem] text-ink-3">{latency?.gap ? `Not measured: ${breakdownLabel(latency.gap)}` : 'Not measured.'}</p>
+            <p className="text-[0.84rem] text-ink-3">{notMeasured(latency)}</p>
           )}
-          <LatencyStrip points={lat.map((l) => l.days).filter((d): d is number => d !== null)} tolerance={tolerance} />
+          {latency?.value !== null && latency !== undefined && <LatencyStrip points={lat.map((l) => l.days).filter((d): d is number => d !== null)} tolerance={tolerance} />}
         </div>
       </div>
 

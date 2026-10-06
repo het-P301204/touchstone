@@ -97,7 +97,7 @@ function Graph({ summary, v, d }: { summary: RunSummary; v: VendorSummary; d: Ve
   const related = new Set(edges.filter((e) => e.from === sel || e.to === sel).flatMap((e) => [e.from, e.to]))
   const node = nodes.find((n) => n.id === sel)
   return (
-    <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_22rem]">
+    <div className="grid gap-6 min-[1700px]:grid-cols-[minmax(0,1fr)_22rem]">
       <div className="ts-panel min-w-0 overflow-hidden p-4">
         <div className="ts-scroll-thin overflow-x-auto">
           <svg viewBox={`0 0 ${W} ${H}`} className="min-w-[56rem]" role="group" aria-label={`Evidence graph for ${v.vendor.canonicalName}`}>

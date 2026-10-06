@@ -82,7 +82,7 @@ export function VendorHeader({ summary, v, detail, isDemo }: { summary: RunSumma
         <span className="ts-ident text-ink-2">{v.vendor.canonicalName}</span>
       </nav>
       <div className="flex flex-wrap items-start justify-between gap-x-8 gap-y-5">
-        <div className="min-w-0 max-w-3xl flex-1">
+        <div className="min-w-0 max-w-3xl grow basis-[min(100%,24rem)]">
           <div className="mb-3 flex flex-wrap items-center gap-2">
             {(isDemo || v.vendor.synthetic) && <DemoLabel long />}
             <Tag>{CATEGORY_LABEL[v.vendor.category]}</Tag>

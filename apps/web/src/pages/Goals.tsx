@@ -83,8 +83,8 @@ function GoalAcrossVendors({ goalId }: { goalId: string }) {
       <StackBar parts={counts.map(({ s, n }) => ({ key: s, label: GOAL_STATUS[s].label, value: n, tone: GOAL_STATUS[s].tone, hatch: s === 'NOT_EXTERNALLY_VERIFIABLE', dashed: s === 'NOT_VERIFIED' }))} />
       <ul className="mt-5 grid gap-x-6 gap-y-2 sm:grid-cols-2">
         {rows.map(({ v, g }) => (
-          <li key={v.vendor.id} className="flex min-w-0 items-center justify-between gap-3 border-b border-line py-2">
-            <Link to={paths.vendor(v.vendor.id)} className="ts-ident min-w-0 text-[0.86rem] font-semibold text-ink hover:underline">
+          <li key={v.vendor.id} className="flex min-w-0 flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b border-line py-2">
+            <Link to={paths.vendor(v.vendor.id)} className="min-w-[9rem] text-[0.86rem] font-semibold text-ink hover:underline">
               {v.vendor.canonicalName}
             </Link>
             <StatusBadge status={g!.status} size="sm" short />

@@ -12,7 +12,7 @@ import { DemoLabel, Segmented } from '../../ui/controls.tsx'
 import { Load } from '../../ui/States.tsx'
 import { HowCalculated } from '../../features/figures.tsx'
 import { dateTime, num } from '../../lib/format.ts'
-import { ALIAS_KIND_LABEL } from '../../lib/vocab.ts'
+import { ALIAS_KIND_LABEL, notMeasured } from '../../lib/vocab.ts'
 
 type Tab = 'queries' | 'identity' | 'snapshots' | 'formulas'
 
@@ -76,7 +76,7 @@ export function Research() {
                       <li key={m.metricId} className="grid gap-1.5 bg-surface-raised px-4 py-3 lg:grid-cols-[14rem_minmax(0,1fr)_auto] lg:items-start lg:gap-4">
                         <span className="min-w-0">
                           <span className="block font-mono text-[0.76rem] font-semibold text-ink">{m.metricId}</span>
-                          <span className="block font-mono text-[0.72rem] text-ink-3">{m.calculation || (m.gap ? `gap: ${m.gap}` : '')}</span>
+                          <span className="block font-mono text-[0.72rem] text-ink-3">{m.value === null ? notMeasured(m) : m.calculation}</span>
                         </span>
                         <span className="ts-ident font-mono text-[0.72rem] leading-relaxed text-ink-2">{m.query}</span>
                         <span className="flex items-center gap-2 text-[0.72rem] text-ink-3">

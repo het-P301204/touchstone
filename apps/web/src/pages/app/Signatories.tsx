@@ -49,7 +49,7 @@ function Table({ summary, rows, sort, dir, onSort }: { summary: RunSummary; rows
           <tbody>
             {rows.map((v) => (
               <tr key={v.vendor.id} className="ts-rowlink" onClick={() => navigate(`/app/vendors/${v.vendor.id}`)}>
-                <td className="max-w-[15rem]">
+                <td className="min-w-[12rem] max-w-[16rem]">
                   <Link to={`/app/vendors/${v.vendor.id}`} onClick={(e) => e.stopPropagation()} className="ts-ident font-semibold text-ink hover:underline">
                     {v.vendor.canonicalName}
                   </Link>

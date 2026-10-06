@@ -103,7 +103,7 @@ export function Kbd({ children }: { children: ReactNode }) {
 export function DemoLabel({ className, long = false }: { className?: string; long?: boolean }) {
   return (
     <span
-      className={cx('inline-flex items-center gap-1.5 rounded-chip border border-dashed border-marigold-ink/50 bg-marigold/10 px-2 py-0.5 font-mono text-[0.68rem] font-medium uppercase tracking-[0.1em] text-marigold-ink', className)}
+      className={cx('inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-chip border border-dashed border-marigold-ink/50 bg-marigold/10 px-2 py-0.5 font-mono text-[0.68rem] font-medium uppercase tracking-[0.1em] text-marigold-ink', className)}
       title="Synthetic demo dataset: fictional vendors and records. These are not measurements of real companies."
     >
       <FlaskConical aria-hidden="true" className="size-3.5" />

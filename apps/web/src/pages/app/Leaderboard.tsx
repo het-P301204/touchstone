@@ -37,7 +37,7 @@ function Row({ v, summary, open, onToggle }: { v: VendorSummary; summary: RunSum
   return (
     <Fragment>
       <tr>
-        <td className="max-w-[15rem]">
+        <td className="min-w-[12rem] max-w-[16rem]">
           <Link to={`/app/vendors/${v.vendor.id}`} className="ts-ident font-semibold text-ink hover:underline">
             {v.vendor.canonicalName}
           </Link>

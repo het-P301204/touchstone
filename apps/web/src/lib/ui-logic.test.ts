@@ -3,7 +3,8 @@ import type { HistorySeries, VendorSummary } from '@touchstone/core/model'
 import { bucket20, lastComparableDelta, median } from './history.ts'
 import { date, minusDays, pct } from './format.ts'
 import { GOAL_STATUS, CRITERION_STATE } from './status.ts'
-import { BANNED_WORDS, breakdownLabel } from './vocab.ts'
+import { BANNED_WORDS, GAP_LABEL, breakdownLabel, metricText, notMeasured } from './vocab.ts'
+import { dimensionGap } from '../features/figures.tsx'
 import { sanitizeDispute } from '../data/source.ts'
 import { sortVendors } from '../features/vendorTable.tsx'
 import { compareSentence } from '../pages/app/Compare.tsx'
@@ -121,5 +122,29 @@ describe('dates', () => {
   it('formats the date part without time-zone drift', () => {
     expect(date('2026-10-06T23:59:00Z')).toBe('6 Oct 2026')
     expect(minusDays('2026-10-06T12:00:00Z', 730)).toBe('2024-10-06')
+  })
+})
+
+describe('every gap renders as words', () => {
+  it('names the reason for each gap code, never 0 or a bare dash', () => {
+    for (const gap of Object.keys(GAP_LABEL)) {
+      const text = notMeasured({ gap: gap as never })
+      expect(text).toMatch(/^Not measured: [a-z]/)
+      expect(/(^|[^0-9])0([^0-9]|$)/.test(text)).toBe(false)
+      expect(text.includes(String.fromCodePoint(0x2014))).toBe(false)
+    }
+    expect(notMeasured({ gap: 'BELOW_MINIMUM_SAMPLE' })).toBe('Not measured: below minimum sample')
+    expect(notMeasured({ gap: 'SOURCE_FAILED' })).toBe('Not measured: source unavailable')
+  })
+  it('formats a present value and explains an absent one', () => {
+    expect(metricText({ value: 0, gap: undefined }, { unit: 'PERCENT' })).toBe('0.0%')
+    expect(metricText({ value: null, gap: 'NO_SOURCE' }, { unit: 'PERCENT' })).toBe('Not measured: no machine-readable source')
+    expect(metricText(undefined)).toBe('Not reported in this run')
+  })
+  it('labels a DATA_ERROR dimension as a data error, with its gap', () => {
+    const v = vendor('x', {})
+    v.dimensions = [{ dimension: 'VDP', value: null, metricId: 'vdp.criteria_met', status: 'DATA_ERROR' }]
+    v.goals = [{ vendorId: 'x', goalId: 'G5', status: 'DATA_ERROR', statusReason: '', metrics: [{ metricId: 'vdp.criteria_met', value: null, gap: 'SOURCE_FAILED', confidence: 'LOW', confidenceReasons: [], evidenceIds: [], query: '', calculation: '' }], claimCount: 0, evidenceCount: 0 }]
+    expect(dimensionGap(v, 'VDP')).toBe('Data error: source unavailable')
   })
 })

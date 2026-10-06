@@ -13,7 +13,7 @@ import { PageHeader, Panel } from '../../ui/Panel.tsx'
 import { DemoLabel } from '../../ui/controls.tsx'
 import { EmptyState, Load } from '../../ui/States.tsx'
 import { StatusBadge } from '../../ui/StatusBadge.tsx'
-import { DIMENSION_LABEL, defOf, formatMetric, metricOf } from '../../lib/vocab.ts'
+import { DIMENSION_LABEL, defOf, metricOf, metricText } from '../../lib/vocab.ts'
 import { pct } from '../../lib/format.ts'
 import { HowCalculated, dimensionValue } from '../../features/figures.tsx'
 import { ProcurementNote } from './VendorProfile.tsx'
@@ -82,7 +82,7 @@ function cellFor(summary: RunSummary, v: VendorSummary, metricId: string, runId:
   if (!found) return <span className="text-ink-3">—</span>
   return (
     <span className="inline-flex items-center gap-1.5">
-      <span className={found.metric.value === null ? 'text-[0.8rem] text-ink-3' : 'ts-num text-ink'}>{found.metric.value === null ? 'not measured' : formatMetric(found.metric.value, def)}</span>
+      <span className={found.metric.value === null ? 'text-[0.8rem] text-ink-3' : 'ts-num text-ink'}>{metricText(found.metric, def)}</span>
       <HowCalculated vendorId={v.vendor.id} runId={runId} goalId={found.goal.goalId} metricId={metricId} iconOnly />
     </span>
   )
@@ -187,9 +187,9 @@ export function Compare() {
                             <dd className="ts-num text-ink">{pct(v.coverage.percent, 0)}</dd>
                           </div>
                           {ROWS.map((r) => (
-                            <div key={r.id} className="flex items-baseline justify-between gap-3 border-t border-line pt-2.5">
-                              <dt className="min-w-0 text-ink-2">{defOf(summary, r.id)?.name ?? r.id}</dt>
-                              <dd className="shrink-0">{cellFor(summary, v, r.id, runId)}</dd>
+                            <div key={r.id} className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-t border-line pt-2.5">
+                              <dt className="min-w-[10rem] grow basis-0 text-ink-2">{defOf(summary, r.id)?.name ?? r.id}</dt>
+                              <dd className="ml-auto text-right">{cellFor(summary, v, r.id, runId)}</dd>
                             </div>
                           ))}
                         </dl>

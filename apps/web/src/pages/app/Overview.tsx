@@ -1,4 +1,5 @@
 import { Link, useSearchParams } from 'react-router'
+import { useCallback } from 'react'
 import { ArrowUpRight } from 'lucide-react'
 import type { FreshnessState, RunSummary } from '@touchstone/core/model'
 import { useActiveSummary, useHistory } from '../../data/hooks.ts'
@@ -38,7 +39,8 @@ function FreshnessSummary({ summary }: { summary: RunSummary }) {
 export function Overview() {
   const value = useActiveSummary()
   const history = useHistory()
-  const [params] = useSearchParams()
+  const [params, setParams] = useSearchParams()
+  const consumeRefresh = useCallback(() => setParams({}, { replace: true }), [setParams])
   return (
     <Load value={value} what="the overview">
       {({ summary, index }) => {
@@ -194,7 +196,7 @@ export function Overview() {
                 </div>
               </Panel>
               <Panel title="Refresh pipeline" eyebrow="Fetch → normalize → validate → score → publish">
-                <RefreshPipeline manifest={m} autoStart={params.get('refresh') === '1'} />
+                <RefreshPipeline manifest={m} autoStart={params.get('refresh') === '1'} onAutoStarted={consumeRefresh} />
                 <div className="mt-5 flex flex-wrap gap-2">
                   {summary.freshness
                     .filter((f) => f.state !== 'CURRENT')

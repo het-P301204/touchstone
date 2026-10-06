@@ -51,12 +51,13 @@ function StageIcon({ status }: { status: RefreshStage['status'] }) {
   return <CircleDashed aria-hidden="true" className={cx(cls, 'text-ink-3')} />
 }
 
-export function RefreshPipeline({ manifest, autoStart = false }: { manifest: RunManifest; autoStart?: boolean }) {
+export function RefreshPipeline({ manifest, autoStart = false, onAutoStarted }: { manifest: RunManifest; autoStart?: boolean; onAutoStarted?: () => void }) {
   const info = useSourceInfo()
   const [stages, setStages] = useState<RefreshStage[]>(() => fold(manifest.stages))
   const [state, setState] = useState<'idle' | 'running' | 'done' | 'error'>('idle')
   const [message, setMessage] = useState<string | null>(null)
   const [label, setLabel] = useState<'published' | 'replay' | 'live'>('published')
+  const [newRun, setNewRun] = useState(false)
   const timers = useRef<number[]>([])
   const started = useRef(false)
 
@@ -101,7 +102,7 @@ export function RefreshPipeline({ manifest, autoStart = false }: { manifest: Run
       let job: RefreshJob = await src.refresh(token)
       setStages(fold(job.stages))
       while (job.status === 'QUEUED' || job.status === 'RUNNING') {
-        await new Promise((r) => window.setTimeout(r, 700))
+        await new Promise((r) => window.setTimeout(r, 1200))
         job = await src.refreshStatus(job.jobId)
         setStages(fold(job.stages))
       }
@@ -111,7 +112,9 @@ export function RefreshPipeline({ manifest, autoStart = false }: { manifest: Run
       } else {
         setState('done')
         setMessage(job.statement ?? `Refresh complete${job.runId ? `: run ${job.runId}` : ''}.`)
-        invalidate()
+        // Reloading the index here would remount this panel and lose the job's result:
+        // the reader loads the new run explicitly instead.
+        setNewRun(true)
       }
     } catch (e) {
       setState('error')
@@ -127,6 +130,8 @@ export function RefreshPipeline({ manifest, autoStart = false }: { manifest: Run
   useEffect(() => {
     if (autoStart && !started.current && info.status === 'ready') {
       started.current = true
+      // Consume the trigger so a remount (or reload) never starts a second job.
+      onAutoStarted?.()
       run()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -170,6 +175,11 @@ export function RefreshPipeline({ manifest, autoStart = false }: { manifest: Run
       {message && (
         <p role="status" className={cx('mt-3 text-[0.82rem]', state === 'error' ? 'text-vermilion-ink' : 'text-ink-2')}>
           {message} {state === 'error' && message.includes('Settings') && <Link to="/app/settings" className="ts-link">Open Settings</Link>}
+          {newRun && (
+            <button type="button" className="ts-link ml-1" onClick={() => invalidate('index')}>
+              Load the latest run
+            </button>
+          )}
         </p>
       )}
     </div>

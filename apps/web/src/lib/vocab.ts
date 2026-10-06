@@ -76,7 +76,7 @@ export const GAP_LABEL: Record<string, string> = {
   PARSER_FAILURE: 'Parser failure',
   NOT_APPLICABLE: 'Not applicable',
   NO_ELIGIBLE_RECORDS: 'No eligible records',
-  NO_SOURCE: 'No source',
+  NO_SOURCE: 'No machine-readable source',
   SOURCE_FAILED: 'Source unavailable',
   BELOW_MINIMUM_SAMPLE: 'Below minimum sample',
 }
@@ -106,6 +106,17 @@ export function metricOf(v: Pick<VendorSummary, 'goals'>, metricId: string): { g
 
 export function dimensionOf(v: VendorSummary, dim: DimensionId) {
   return v.dimensions.find((d) => d.dimension === dim)
+}
+
+/** "Not measured: below minimum sample" — a missing value always says why, never 0 or a bare dash. */
+export function notMeasured(m: Pick<MetricValue, 'gap'> | undefined): string {
+  return m?.gap ? `Not measured: ${(GAP_LABEL[m.gap] ?? m.gap).toLowerCase()}` : 'Not measured'
+}
+
+/** A metric's value, or the reason it has none. */
+export function metricText(m: Pick<MetricValue, 'value' | 'gap'> | undefined, def?: Pick<MetricDefinition, 'unit'>): string {
+  if (!m) return 'Not reported in this run'
+  return m.value === null ? notMeasured(m) : formatMetric(m.value, def)
 }
 
 /** Format a metric value by unit. */

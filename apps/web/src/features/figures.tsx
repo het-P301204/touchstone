@@ -40,7 +40,8 @@ export function dimensionGap(v: VendorSummary, dim: DimensionId): string | null 
   if (!d || d.value !== null) return null
   const m = metricOf(v, d.metricId)?.metric
   if (d.status === 'NOT_EXTERNALLY_VERIFIABLE') return GOAL_STATUS.NOT_EXTERNALLY_VERIFIABLE.label
-  return m?.gap ? GAP_LABEL[m.gap] ?? m.gap : 'Not measured'
+  if (d.status === 'DATA_ERROR') return m?.gap ? `Data error: ${(GAP_LABEL[m.gap] ?? m.gap).toLowerCase()}` : 'Data error'
+  return m?.gap ? `Not measured: ${(GAP_LABEL[m.gap] ?? m.gap).toLowerCase()}` : 'Not measured'
 }
 
 export function DimensionCell({ v, dim, compact = false }: { v: VendorSummary; dim: DimensionId; compact?: boolean }) {

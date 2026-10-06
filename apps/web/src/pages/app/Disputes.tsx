@@ -16,7 +16,7 @@ import { DemoLabel, Field } from '../../ui/controls.tsx'
 import { EmptyState, Load } from '../../ui/States.tsx'
 import { StatusBadge } from '../../ui/StatusBadge.tsx'
 import { DISPUTE_STATUS, TONE_CLASSES } from '../../lib/status.ts'
-import { DISPUTE_REASON_LABEL, defOf, formatMetric, metricOf, vendorName } from '../../lib/vocab.ts'
+import { DISPUTE_REASON_LABEL, defOf, metricOf, metricText, vendorName } from '../../lib/vocab.ts'
 import { dateTime } from '../../lib/format.ts'
 import { cx } from '../../lib/cx.ts'
 
@@ -34,7 +34,7 @@ function OriginalResult({ d, summary }: { d: DisputeView; summary: RunSummary })
     const m = metricOf(v, d.target.id)
     return m ? (
       <span className="ts-num text-[0.84rem] text-ink">
-        {formatMetric(m.metric.value, defOf(summary, d.target.id))} <span className="font-sans text-[0.75rem] text-ink-3">{m.metric.calculation}</span>
+        {metricText(m.metric, defOf(summary, d.target.id))} <span className="font-sans text-[0.75rem] text-ink-3">{m.metric.calculation}</span>
       </span>
     ) : (
       <span className="text-ink-3">—</span>

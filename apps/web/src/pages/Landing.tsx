@@ -170,8 +170,8 @@ export function Landing() {
         title="From a public page to a figure you can re-run."
         lede="Five stages, in order. Each leaves an artifact you can inspect: the snapshot, the normalized record, the formula, the evidence item, the run hash."
       >
-        <ol className="relative grid gap-4 md:grid-cols-5 md:gap-3">
-          <span aria-hidden="true" className="absolute left-0 right-0 top-[1.1rem] hidden h-px bg-line-strong md:block" />
+        <ol className="relative grid gap-6 sm:grid-cols-2 lg:grid-cols-5 lg:gap-3">
+          <span aria-hidden="true" className="absolute left-0 right-0 top-[1.1rem] hidden h-px bg-line-strong lg:block" />
           {PIPELINE.map((p, i) => (
             <motion.li key={p.step} {...reveal} transition={{ ...reveal.transition, delay: i * 0.07 }} className="relative min-w-0">
               <span className="relative z-[1] inline-flex h-9 items-center rounded-full bg-ink px-3.5 font-mono text-[0.72rem] text-paper">{String(i + 1).padStart(2, '0')}</span>

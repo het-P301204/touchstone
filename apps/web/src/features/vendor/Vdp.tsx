@@ -15,7 +15,58 @@ import { date } from '../../lib/format.ts'
 import { HowCalculated } from '../figures.tsx'
 import type { CriterionState } from '@touchstone/core/model'
 
+type Retrieval = VdpObservation['policy']['retrieval']
+
+/** How the policy text was obtained. Older runs predate the field: infer only "found" vs "not found". */
+export function retrievalOf(vdp: VdpObservation): Retrieval | undefined {
+  return vdp.policy.retrieval ?? (vdp.policy.found ? undefined : 'NOT_FOUND')
+}
+
+const RETRIEVAL_NOTE: Record<Retrieval, { tone: 'sage' | 'marigold' | 'vermilion' | 'stone'; text: (words?: number, min?: number) => string }> = {
+  READ: { tone: 'sage', text: (w) => `Policy text read${w !== undefined ? ` (${w} words)` : ''}. Each criterion below quotes the sentence it rests on.` },
+  TOO_SHORT: {
+    tone: 'marigold',
+    text: (w, min) => `Policy text is shorter than the plausibility floor (${w ?? '?'} words${min ? `, minimum ${min}` : ''}): assessed, but Goal 5 is at most partial.`,
+  },
+  UNREADABLE: { tone: 'vermilion', text: () => 'Policy could not be read (script-only, interstitial or empty page): criteria undetermined. This is not a finding about the policy’s content.' },
+  FETCH_FAILED: { tone: 'vermilion', text: () => 'Policy could not be fetched: criteria undetermined. A retrieval problem is never reported as a missing element.' },
+  NOT_FOUND: { tone: 'stone', text: () => 'No policy document was found on the vendor’s domain, in security.txt or in the registry: pledge elements are reported as not found.' },
+}
+
+const RETRIEVAL_LABEL: Record<Retrieval, string> = {
+  READ: 'Read',
+  TOO_SHORT: 'Read, below the plausibility floor',
+  UNREADABLE: 'Not readable',
+  FETCH_FAILED: 'Fetch failed',
+  NOT_FOUND: 'No policy found',
+}
+
+const NOTE_TONE = {
+  sage: 'border-sage/40 bg-sage/10 text-sage-ink',
+  marigold: 'border-marigold/40 bg-marigold/10 text-marigold-ink',
+  vermilion: 'border-vermilion/40 bg-vermilion/10 text-vermilion-ink',
+  stone: 'border-line-strong bg-paper-2 text-ink-2',
+}
+
+function RetrievalNote({ vdp, minWords }: { vdp: VdpObservation; minWords?: number }) {
+  const r = retrievalOf(vdp)
+  if (!r) return null
+  const note = RETRIEVAL_NOTE[r]
+  return (
+    <p role="note" className={`rounded-[12px] border px-4 py-2.5 text-[0.84rem] ${NOTE_TONE[note.tone]}`}>
+      {note.text(vdp.policy.wordCount, minWords)}
+    </p>
+  )
+}
+
+function unknownText(r: Retrieval | undefined): string {
+  if (r === 'UNREADABLE') return 'Undetermined: the policy page could not be read.'
+  if (r === 'FETCH_FAILED') return 'Undetermined: the policy could not be fetched.'
+  return 'Undetermined: no readable policy text.'
+}
+
 function Criteria({ vdp }: { vdp: VdpObservation }) {
+  const r = retrievalOf(vdp)
   return (
     <ul className="divide-y divide-line overflow-hidden rounded-card border border-line">
       {vdp.criteria.map((c) => {
@@ -41,7 +92,7 @@ function Criteria({ vdp }: { vdp: VdpObservation }) {
                   </blockquote>
                 ))
               ) : (
-                <p className="text-[0.84rem] text-ink-3">{c.state === 'UNKNOWN' ? 'No readable policy text: could not be determined.' : 'No sentence in the policy supports this element.'}</p>
+                <p className="text-[0.84rem] text-ink-3">{c.state === 'UNKNOWN' ? unknownText(r) : r === 'NOT_FOUND' ? 'Not found: there is no policy document to contain it.' : 'No sentence in the policy supports this element.'}</p>
               )}
               {c.note && <p className="text-[0.8rem] text-ink-2">{c.note}</p>}
             </div>
@@ -79,7 +130,7 @@ function Change({ change }: { change: VdpChange }) {
   )
 }
 
-export function VdpExplorer({ v, runId }: { v: VendorSummary; runId: string }) {
+export function VdpExplorer({ v, runId, minWords }: { v: VendorSummary; runId: string; minWords?: number }) {
   const vdp = v.vdp
   return (
     <Panel
@@ -99,15 +150,17 @@ export function VdpExplorer({ v, runId }: { v: VendorSummary; runId: string }) {
               Refresh failed — using previous verified snapshot {vdp.carriedFromSnapshotId} (observed {date(vdp.observedAt)}).
             </p>
           )}
+          <RetrievalNote vdp={vdp} minWords={minWords} />
           <KV
             rows={[
               ['Policy', vdp.policy.found && vdp.policy.url ? <ExtLink href={vdp.policy.url} /> : 'No policy document found'],
-              ['Hosted on', vdp.policy.host ?? '—'],
+              ['Hosted on', vdp.policy.host ?? 'Not stated'],
               ['Stated last update', vdp.policy.statedLastUpdated ? date(vdp.policy.statedLastUpdated) : 'Not stated'],
               ['Observed', date(vdp.observedAt)],
               ['security.txt', vdp.securityTxt.present ? <span>{vdp.securityTxt.url ? <ExtLink href={vdp.securityTxt.url} /> : 'present'}{vdp.securityTxt.expires ? ` · expires ${date(vdp.securityTxt.expires)}` : ' · no Expires field'}</span> : 'Not found'],
-              ['Contacts', vdp.securityTxt.contacts.length ? <span className="font-mono text-[0.78rem]">{vdp.securityTxt.contacts.join(', ')}</span> : '—'],
-              ['Policy words', vdp.policy.wordCount !== undefined ? String(vdp.policy.wordCount) : '—'],
+              ['Contacts', vdp.securityTxt.contacts.length ? <span className="font-mono text-[0.78rem]">{vdp.securityTxt.contacts.join(', ')}</span> : 'None listed'],
+              ['Policy words', vdp.policy.wordCount !== undefined ? String(vdp.policy.wordCount) : 'Not extracted'],
+              ['Policy text', retrievalOf(vdp) ? RETRIEVAL_LABEL[retrievalOf(vdp)!] : 'Not recorded in this run'],
             ]}
           />
           {vdp.prohibitive.length > 0 && (

@@ -12,6 +12,7 @@ import { cleanText } from '../../../../packages/core/src/util/sanitize.ts'
 import type {
   Dispute,
   DisputeReason,
+  DisputeStatus,
   HistorySeries,
   NotebookEntry,
   RunIndex,
@@ -46,6 +47,8 @@ export type RefreshJob = {
   error?: string
 }
 
+export type DisputeTransition = { to: DisputeStatus; note: string; actor?: string; correctedInRunId?: string }
+
 export type ReportFormat = 'pdf' | 'markdown' | 'csv' | 'json'
 
 export interface DataSource {
@@ -64,6 +67,10 @@ export interface DataSource {
   /** API: starts a pipeline refresh (administrative: needs the admin bearer token). Static: not available (the UI replays the stage log instead). */
   refresh?(adminToken: string): Promise<RefreshJob>
   refreshStatus?(jobId: string): Promise<RefreshJob>
+  /** API only: one dispute with the transitions its current status allows. */
+  disputeDetail?(id: string): Promise<DisputeView & { allowedTransitions: DisputeStatus[] }>
+  /** API only (administrative): move a dispute to its next status. */
+  transitionDispute?(id: string, body: DisputeTransition, adminToken: string): Promise<DisputeView>
   /** API: the server renders the report. Static: undefined (rendered in the browser from core). */
   reportUrl?(vendorId: string, runId: string, format: ReportFormat): string
 }
@@ -251,6 +258,16 @@ class ApiSource implements DataSource {
   }
   refreshStatus(jobId: string) {
     return getJson<RefreshJob>(`/api/refresh/${enc(jobId)}`)
+  }
+  disputeDetail(id: string) {
+    return getJson<DisputeView & { allowedTransitions: DisputeStatus[] }>(`/api/disputes/${enc(id)}`)
+  }
+  transitionDispute(id: string, body: DisputeTransition, adminToken: string) {
+    return getJson<DisputeView>(`/api/disputes/${enc(id)}/transition`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
+      body: JSON.stringify({ ...body, note: cleanText(body.note).trim().slice(0, MAX_STATEMENT) }),
+    })
   }
   reportUrl(vendorId: string, runId: string, format: ReportFormat) {
     return `/api/reports/${enc(vendorId)}?format=${enc(format)}&run=${enc(runId)}`

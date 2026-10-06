@@ -9,7 +9,7 @@ import { CoverageRing, StackBar } from '../../ui/charts.tsx'
 import { StatusBadge } from '../../ui/StatusBadge.tsx'
 import { Disclosure } from '../../ui/controls.tsx'
 import { GOAL_STATUS, POSITION, TONE_CLASSES } from '../../lib/status.ts'
-import { DIMENSION_LABEL, defOf, formatMetric, metricOf, slotLabel } from '../../lib/vocab.ts'
+import { DIMENSION_LABEL, defOf, metricOf, metricText, slotLabel } from '../../lib/vocab.ts'
 import { pct } from '../../lib/format.ts'
 import { cx } from '../../lib/cx.ts'
 import { HowCalculated } from '../figures.tsx'
@@ -30,13 +30,13 @@ export function EvidenceOverview({ summary, v, runId }: { summary: RunSummary; v
   const scorecard: { label: string; value: string; sub: string; metric?: { goalId: string; metricId: string } }[] = [
     {
       label: 'CWE coverage',
-      value: formatMetric(cwe?.metric.value ?? null, { unit: 'PERCENT' }),
+      value: metricText(cwe?.metric, { unit: 'PERCENT' }),
       sub: cwe?.metric.calculation || 'CNA-supplied CWE, eligible records',
       metric: cwe ? { goalId: cwe.goal.goalId, metricId: 'cve.cwe_coverage' } : undefined,
     },
     {
       label: 'CPE coverage',
-      value: formatMetric(cpe?.metric.value ?? null, { unit: 'PERCENT' }),
+      value: metricText(cpe?.metric, { unit: 'PERCENT' }),
       sub: cpe?.metric.calculation || 'CNA-supplied CPE 2.3, eligible records',
       metric: cpe ? { goalId: cpe.goal.goalId, metricId: 'cve.cpe_coverage' } : undefined,
     },
@@ -48,8 +48,8 @@ export function EvidenceOverview({ summary, v, runId }: { summary: RunSummary; v
     },
     {
       label: 'CVE timeliness',
-      value: formatMetric(timely?.metric.value ?? null, { unit: 'PERCENT' }),
-      sub: timelyBench && timelyBench.position !== 'NOT_COMPARABLE' ? `${POSITION[timelyBench.position].label} (peer median ${pct(timelyBench.peerMedian, 0)})` : 'vs cohort: not comparable',
+      value: metricText(timely?.metric, { unit: 'PERCENT' }),
+      sub: timely?.metric.value !== null && timely?.metric.value !== undefined && timelyBench && timelyBench.position !== 'NOT_COMPARABLE' ? `${POSITION[timelyBench.position].label} (peer median ${pct(timelyBench.peerMedian, 0)})` : 'vs cohort: not comparable',
       metric: timely ? { goalId: timely.goal.goalId, metricId: 'cve.timely_issuance' } : undefined,
     },
   ]
@@ -59,9 +59,9 @@ export function EvidenceOverview({ summary, v, runId }: { summary: RunSummary; v
       <h2 id="overview-title" className="sr-only">
         Evidence overview
       </h2>
-      <div className="ts-panel flex flex-wrap items-center justify-center gap-6 p-6">
+      <div className="ts-panel grid gap-6 p-6 md:grid-cols-[auto_minmax(0,1fr)] md:items-center xl:grid-cols-1">
         <CoverageRing percent={c.percent} observed={c.observedSlots} total={c.totalSlots} />
-        <div className="min-w-0 flex-1 basis-[17rem] space-y-4">
+        <div className="min-w-0 space-y-4">
           <div>
             <p className="ts-eyebrow mb-2">Goals by evidence state</p>
             <StackBar
@@ -109,7 +109,7 @@ export function EvidenceOverview({ summary, v, runId }: { summary: RunSummary; v
                 {s.metric && <HowCalculated vendorId={v.vendor.id} runId={runId} goalId={s.metric.goalId} metricId={s.metric.metricId} iconOnly />}
               </div>
               <dd className="mt-2">
-                <span className={cx('block leading-none text-ink', /^[\d—]/.test(s.value) ? 'ts-num text-[1.65rem] font-medium' : 'text-[1.3rem] font-bold tracking-tight')}>{s.value}</span>
+                <span className={cx('block leading-none text-ink', /^\d/.test(s.value) ? 'ts-num text-[1.65rem] font-medium' : s.value.startsWith('Not ') ? 'text-[1rem] font-semibold text-ink-2' : 'text-[1.3rem] font-bold tracking-tight')}>{s.value}</span>
                 <span className="ts-ident mt-2 block font-mono text-[0.72rem] leading-snug text-ink-3">{s.sub}</span>
               </dd>
             </div>
@@ -170,7 +170,7 @@ export function GoalCards({ summary, v, runId, disputedGoals }: { summary: RunSu
                       return (
                         <li key={m.metricId} className="flex min-w-0 items-center gap-3 px-3 py-2">
                           <span className="min-w-0 flex-1 text-[0.8rem] text-ink-2">{def?.name ?? m.metricId}</span>
-                          <span className={cx('ts-num shrink-0 text-[0.82rem]', m.value === null ? 'text-ink-3' : 'text-ink')}>{formatMetric(m.value, def)}</span>
+                          <span className={cx('max-w-[55%] text-right text-[0.8rem]', m.value === null ? 'text-ink-3' : 'ts-num text-ink')}>{metricText(m, def)}</span>
                           <HowCalculated vendorId={v.vendor.id} runId={runId} goalId={g.goalId} metricId={m.metricId} iconOnly />
                         </li>
                       )

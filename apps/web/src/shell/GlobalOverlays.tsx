@@ -34,10 +34,12 @@ export function GlobalOverlays() {
   if (metric && !everMetric) setEverMetric(true)
   if (evidence && !everEvidence) setEverEvidence(true)
   return (
-    <Suspense fallback={null}>
-      {commandOpen && <CommandPalette />}
-      {everMetric && <MetricDrawer target={metric} />}
-      {everEvidence && <EvidenceViewer target={evidence} />}
-    </Suspense>
+    <>
+      {/* One boundary per overlay: a lazy chunk loading for one overlay must not
+          suspend (hide) another mid-animation, which left exits unfinished. */}
+      <Suspense fallback={null}>{commandOpen && <CommandPalette />}</Suspense>
+      <Suspense fallback={null}>{everMetric && <MetricDrawer target={metric} />}</Suspense>
+      <Suspense fallback={null}>{everEvidence && <EvidenceViewer target={evidence} />}</Suspense>
+    </>
   )
 }

@@ -16,7 +16,7 @@ import { Button } from '../ui/Button.tsx'
 import { CopyText, KV } from '../ui/controls.tsx'
 import { Load } from '../ui/States.tsx'
 import { StateChip, StatusBadge } from '../ui/StatusBadge.tsx'
-import { GAP_LABEL, breakdownLabel, defOf, formatMetric, vendorName } from '../lib/vocab.ts'
+import { breakdownLabel, defOf, notMeasured, formatMetric, vendorName } from '../lib/vocab.ts'
 import { INTERPRETATION } from '../lib/status.ts'
 import { date, dateTime, minusDays, num, shortHash } from '../lib/format.ts'
 import { cx } from '../lib/cx.ts'
@@ -70,8 +70,12 @@ function MetricBody({ target, summary, detail }: { target: MetricTarget; summary
     <div className="space-y-7">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0">
-          <p className="ts-num text-[2.6rem] font-medium leading-none tracking-tight text-ink">{formatMetric(metric.value, def)}</p>
-          {metric.value === null && metric.gap && <p className="mt-2 text-sm text-ink-2">Not measured: {GAP_LABEL[metric.gap] ?? metric.gap}. A missing value is never shown as zero.</p>}
+          {metric.value === null ? (
+            <p className="text-title-2 text-ink-2">{notMeasured(metric)}</p>
+          ) : (
+            <p className="ts-num text-[2.6rem] font-medium leading-none tracking-tight text-ink">{formatMetric(metric.value, def)}</p>
+          )}
+          {metric.value === null && <p className="mt-2 text-sm text-ink-3">A missing value is never shown as zero{metric.gap ? ` (gap code ${metric.gap})` : ''}.</p>}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <StatusBadge status={goal.status} size="sm" />

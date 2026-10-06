@@ -44,7 +44,7 @@ export function DemoBoard() {
                 <tbody>
                   {rows.map((v) => (
                     <tr key={v.vendor.id}>
-                      <td className="max-w-[16rem]">
+                      <td className="min-w-[12rem] max-w-[16rem]">
                         <Link to={`/app/vendors/${v.vendor.id}`} className="ts-ident font-semibold text-ink hover:underline">
                           {v.vendor.canonicalName}
                         </Link>

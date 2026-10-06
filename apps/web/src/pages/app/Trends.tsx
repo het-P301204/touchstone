@@ -110,7 +110,7 @@ function View({ summary, index, history }: { summary: RunSummary; index: RunInde
                 <Link to={`/app/vendors/${v.vendor.id}`} className="ts-ident min-w-0 text-[0.84rem] font-semibold text-ink hover:underline">
                   {v.vendor.canonicalName}
                 </Link>
-                <span className="ts-num shrink-0 text-[0.8rem] text-ink-2">{formatMetric(last, def)}</span>
+                <span className="ts-num shrink-0 text-[0.8rem] text-ink-2">{last === null ? <span className="font-sans text-[0.74rem] text-ink-3">not measured</span> : formatMetric(last, def)}</span>
               </div>
               {s ? <Sparkline s={s} yMax={yMax} /> : <p className="py-2 text-[0.78rem] text-ink-3">No history for this metric.</p>}
               <label className="mt-1 flex items-center gap-2 text-[0.75rem] text-ink-2">

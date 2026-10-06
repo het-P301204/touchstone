@@ -64,7 +64,7 @@ function TopBar() {
           ))}
         </nav>
         <div className="ml-auto flex items-center gap-1.5">
-          <ModeSwitch className="hidden md:block" />
+          <ModeSwitch className="hidden lg:block" />
           <button
             type="button"
             onClick={() => setCommandOpen(true)}
@@ -175,7 +175,7 @@ function MobileNav() {
                 <X />
               </IconButton>
             </div>
-            <div className="border-b border-line px-4 py-3 md:hidden">
+            <div className="border-b border-line px-4 py-3 lg:hidden">
               <ModeSwitch />
             </div>
             <SidebarContent onNavigate={close} />

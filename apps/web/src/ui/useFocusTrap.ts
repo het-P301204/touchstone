@@ -16,6 +16,8 @@ function focusables(root: HTMLElement): HTMLElement[] {
 }
 
 let scrollLocks = 0
+/** Open traps, innermost last: only the top one handles keys, so Esc closes one layer at a time. */
+const stack: symbol[] = []
 
 export function useFocusTrap(ref: RefObject<HTMLElement | null>, active: boolean, options: { onEscape?: () => void; initialFocus?: RefObject<HTMLElement | null> } = {}): void {
   const onEscapeRef = useRef(options.onEscape)
@@ -29,6 +31,8 @@ export function useFocusTrap(ref: RefObject<HTMLElement | null>, active: boolean
     const root = ref.current
     if (!root) return
     const previous = document.activeElement as HTMLElement | null
+    const id = Symbol('trap')
+    stack.push(id)
     const raf = requestAnimationFrame(() => {
       const target = initialFocus?.current ?? root
       target.focus({ preventScroll: true })
@@ -40,6 +44,7 @@ export function useFocusTrap(ref: RefObject<HTMLElement | null>, active: boolean
     if (scrollLocks === 1) html.style.overflow = 'hidden'
 
     const onKey = (e: KeyboardEvent) => {
+      if (stack[stack.length - 1] !== id) return
       if (e.key === 'Escape') {
         e.stopPropagation()
         onEscapeRef.current?.()
@@ -68,6 +73,8 @@ export function useFocusTrap(ref: RefObject<HTMLElement | null>, active: boolean
     return () => {
       cancelAnimationFrame(raf)
       document.removeEventListener('keydown', onKey, true)
+      const at = stack.indexOf(id)
+      if (at >= 0) stack.splice(at, 1)
       scrollLocks--
       if (scrollLocks === 0) html.style.overflow = prevOverflow
       if (previous && document.contains(previous)) previous.focus({ preventScroll: true })

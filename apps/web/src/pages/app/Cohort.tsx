@@ -40,7 +40,7 @@ export function Cohort() {
                   {MEDIAN_METRICS.map((m) => (
                     <div key={m} className="min-w-0 bg-surface p-4">
                       <dt className="text-[0.78rem] text-ink-2">{defOf(summary, m)?.name ?? m}</dt>
-                      <dd className="ts-num mt-1.5 text-[1.4rem] text-ink">{formatMetric(allSig.medians[m] ?? null, defOf(summary, m))}</dd>
+                      <dd className="ts-num mt-1.5 text-[1.4rem] text-ink">{allSig.medians[m] === null || allSig.medians[m] === undefined ? <span className="font-sans text-[0.85rem] text-ink-3">no vendor with a value</span> : formatMetric(allSig.medians[m]!, defOf(summary, m))}</dd>
                     </div>
                   ))}
                 </dl>
@@ -77,7 +77,7 @@ export function Cohort() {
                         <td className="ts-num text-right">{g.vendorCount}</td>
                         {['vdp.criteria_met', 'cve.complete_records', 'cve.timely_issuance'].map((m) => (
                           <td key={m} className="ts-num text-right text-ink-2">
-                            {g.vendorCount < 3 ? <span className="text-[0.75rem] text-ink-3">too few</span> : formatMetric(g.medians[m] ?? null, defOf(summary, m))}
+                            {g.vendorCount < 3 ? <span className="text-[0.75rem] text-ink-3">too few</span> : g.medians[m] === null || g.medians[m] === undefined ? <span className="text-[0.75rem] text-ink-3">no value</span> : formatMetric(g.medians[m]!, defOf(summary, m))}
                           </td>
                         ))}
                         <td className="text-[0.78rem] text-ink-2">

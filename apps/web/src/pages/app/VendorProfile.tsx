@@ -76,7 +76,7 @@ export function VendorProfile() {
                   <EvidenceOverview summary={summary} v={v} runId={rid} />
                   <GoalCards summary={summary} v={v} runId={rid} disputedGoals={disputedGoals} />
                   <Anomalies v={v} runId={rid} />
-                  <VdpExplorer v={v} runId={rid} />
+                  <VdpExplorer v={v} runId={rid} minWords={(summary.methodology.parameters as { vdpMinimumPolicyWords?: number }).vdpMinimumPolicyWords} />
                   <CveQuality v={v} detail={d} runId={rid} highImpact={summary.methodology.parameters.highImpactSeverities} tolerance={summary.methodology.parameters.timelinessToleranceDays} />
                   {detail.status === 'error' && <p className="text-sm text-vermilion-ink">Evidence for this vendor could not be loaded: {detail.error.message}</p>}
                   <Benchmarks summary={summary} v={v} />
